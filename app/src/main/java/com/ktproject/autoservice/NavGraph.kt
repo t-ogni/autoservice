@@ -26,14 +26,22 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
         // 🔐 Аутентификация
         composable("login") {
             LoginScreen(
-                onLoginSuccess = { navController.navigate("home") },
+                onLoginSuccess = {
+                    navController.navigate("home"){
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
                 onRegisterClick = { navController.navigate("register") }
             )
         }
 
         composable("register") {
             RegisterScreen(
-                onRegisterSuccess = { navController.navigate("home") },
+                onRegisterSuccess = {
+                    navController.navigate("home"){
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
