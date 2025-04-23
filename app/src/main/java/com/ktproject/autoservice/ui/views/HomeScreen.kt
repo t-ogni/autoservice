@@ -24,6 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -33,6 +35,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
     onCreateRequestClick: () -> Unit,
     onMyRequestsClick: () -> Unit,
     onServicesClick: () -> Unit,
@@ -42,7 +45,12 @@ fun HomeScreen(
 ) {
     var backPressedOnce by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Главное меню") }) }) {
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("Главное меню") })
+    },bottomBar = {
+        BottomNavigationBar(navController = navController)
+    }
+    ) {
         Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
         Button(onClick = onCreateRequestClick) { Text("Записаться на ТО") }
             Button(onClick = onMyRequestsClick) { Text("Мои заявки") }

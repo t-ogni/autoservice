@@ -9,11 +9,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServicesScreen(onServiceClick: (String) -> Unit) {
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Услуги") }) }) {
+fun ServicesScreen(navController: NavHostController, onServiceClick: (String) -> Unit) {
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("Услуги") })
+    }, bottomBar = {
+        BottomNavigationBar(navController = navController)
+    }) {
         Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
         }
     }

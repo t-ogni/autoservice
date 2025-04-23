@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectDateTimeScreen(onNext: () -> Unit) {
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Выбор сервиса") }) })
+    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Выбор даты-времени") }) })
     {
         Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
             // TODO: список услуг с чекбоксами

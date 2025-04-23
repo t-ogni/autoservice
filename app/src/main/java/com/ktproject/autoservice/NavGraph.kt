@@ -1,6 +1,9 @@
 package com.ktproject.autoservice
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,6 +52,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
         // 🏠 Главная
         composable("home") {
             HomeScreen(
+                navController,
                 onCreateRequestClick = { navController.navigate("create_request/service") },
                 onMyRequestsClick = { navController.navigate("my_requests") },
                 onServicesClick = { navController.navigate("services") },
@@ -102,6 +106,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
         // 🛠 Услуги
         composable("services") {
             ServicesScreen(
+                navController,
                 onServiceClick = { serviceId ->
                     navController.navigate("service_details/$serviceId")
                 }
@@ -130,6 +135,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
         // 👤 Профиль
         composable("profile") {
             ProfileScreen(
+                navController,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
