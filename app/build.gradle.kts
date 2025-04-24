@@ -70,6 +70,18 @@ dependencies {
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
+    // Core features
+    implementation("io.insert-koin:koin-core:3.5.0")
+
+    // Android features
+    implementation("io.insert-koin:koin-android:3.5.0")
+
+    // Jetpack Compose support
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
+
+    // Lifecycle ViewModel support
+    implementation("io.insert-koin:koin-androidx-viewmodel:3.5.0") // если не используешь compose
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

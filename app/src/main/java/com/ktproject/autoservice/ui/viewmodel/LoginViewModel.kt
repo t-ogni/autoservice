@@ -1,4 +1,4 @@
-package com.ktproject.autoservice.viewmodel
+package com.ktproject.autoservice.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 

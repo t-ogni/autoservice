@@ -17,7 +17,7 @@ fun AdminServicesScreen() {
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Админ-Услуги") }) })
     {
         Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
-            // TODO: список заявок
+            // TODO: список заявок, рядом с каждой иконки корзины, кнопка +
             Button(onClick = {}) { Text("Удалить") }
             Button(onClick = {}) { Text("Добавить") }
         }
