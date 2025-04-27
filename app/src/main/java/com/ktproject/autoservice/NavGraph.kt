@@ -23,8 +23,20 @@ import com.ktproject.autoservice.ui.views.request_create.SelectDateTimeScreen
 import com.ktproject.autoservice.ui.views.request_create.SelectServiceScreen
 
 @Composable
-fun AppNavGraph(navController: NavHostController, startDestination: String = "login") {
+fun AppNavGraph(navController: NavHostController, startDestination: String = "splash_screen") {
     NavHost(navController = navController, startDestination = startDestination) {
+
+        // Сплеш-скрин с проверкой авторизации
+        composable("splash_screen") {
+            SplashScreen(
+                onAuthFailed = {
+                    navController.navigate("login")
+                },
+                onAuthSuccess = {
+                    navController.navigate("home")
+                }
+            )
+        }
 
         // 🔐 Аутентификация
         composable("login") {
@@ -54,10 +66,10 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
             HomeScreen(
                 navController,
                 onCreateRequestClick = { navController.navigate("create_request/service") },
-                onMyRequestsClick = { navController.navigate("my_requests") },
-                onServicesClick = { navController.navigate("services") },
+                onRequestClick = { requestId ->
+                    navController.navigate("request_details/$requestId")
+                },
                 onNewsClick = { navController.navigate("news") },
-                onProfileClick = { navController.navigate("profile") },
                 onAdminPanelClick = { navController.navigate("admin_dashboard") }
             )
         }
@@ -115,7 +127,10 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "lo
 
         composable("service_details/{serviceId}") { backStackEntry ->
             val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
-            ServiceDetailsScreen(serviceId = serviceId)
+            ServiceDetailsScreen(
+                serviceId = serviceId,
+                navController = navController
+            )
         }
 
         // 📰 Новости

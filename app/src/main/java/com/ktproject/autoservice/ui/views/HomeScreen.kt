@@ -1,69 +1,140 @@
 package com.ktproject.autoservice.ui.views
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.ktproject.autoservice.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Главная
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavHostController,
+    viewModel: HomeViewModel = viewModel(),
     onCreateRequestClick: () -> Unit,
-    onMyRequestsClick: () -> Unit,
-    onServicesClick: () -> Unit,
-    onNewsClick: () -> Unit,
-    onProfileClick: () -> Unit,
+    onRequestClick: (String) -> Unit,
+    onNewsClick: (String) -> Unit,
     onAdminPanelClick: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     var backPressedOnce by remember { mutableStateOf(false) }
-
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("Главное меню") })
-    },bottomBar = {
-        BottomNavigationBar(navController = navController)
-    }
-    ) {
-        Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
-        Button(onClick = onCreateRequestClick) { Text("Записаться на ТО") }
-            Button(onClick = onMyRequestsClick) { Text("Мои заявки") }
-            Button(onClick = onServicesClick) { Text("Услуги") }
-            Button(onClick = onNewsClick) { Text("Новости и акции") }
-            Button(onClick = onProfileClick) { Text("Профиль") }
-            Button(onClick = onAdminPanelClick) { Text("Админ-панель") }
-        }
-    }
-
     val context = LocalContext.current
     val activity = context as? Activity
     val coroutineScope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(title = { Text("Главное меню") })
+        },
+        bottomBar = {
+            BottomNavigationBar(navController = navController)
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            if (uiState.myRequests.isEmpty()) {
+                Button(
+                    onClick = onCreateRequestClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Создать заявку (+)")
+                }
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                ) {
+                    items(uiState.myRequests) { request ->
+                        Card(
+                            onClick = { onRequestClick(request.id) },
+                            modifier = Modifier
+                                .width(120.dp)
+                                .fillMaxHeight()
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = request.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Card(
+                            onClick = onCreateRequestClick,
+                            modifier = Modifier
+                                .width(120.dp)
+                                .fillMaxHeight()
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "+",
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Новости и акции",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(uiState.newsList) { news ->
+                    Card(
+                        onClick = { onNewsClick(news.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(modifier = Modifier.padding(16.dp)) {
+                            Text(text = news.title, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
+
+            if (uiState.userRole == "admin") {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onAdminPanelClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Админ-панель")
+                }
+            }
+        }
+    }
 
     BackHandler {
         if (backPressedOnce) {

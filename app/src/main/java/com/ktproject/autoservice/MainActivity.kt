@@ -22,7 +22,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
-import com.ktproject.autoservice.di.viewModelModule
+import com.ktproject.autoservice.di.*
 import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 import com.ktproject.autoservice.ui.theme.AutoserviceTheme
 import org.koin.android.ext.koin.androidContext
@@ -37,10 +37,6 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         enableEdgeToEdge()
-        startKoin {
-            androidContext(this@MainActivity)
-            modules(listOf(viewModelModule /*, другие модули */))
-        }
 
         setContent {
             AutoserviceTheme {

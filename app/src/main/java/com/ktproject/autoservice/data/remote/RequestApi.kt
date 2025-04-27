@@ -2,7 +2,7 @@ package com.ktproject.autoservice.data.remote
 
 import com.ktproject.autoservice.data.model.ExposedRequest
 
-class RequestsApi(private val apiClient: ApiClient) {
+class RequestApi(private val apiClient: ApiClient) {
 
     suspend fun getUserRequests(): List<ExposedRequest> {
         return apiClient.get("/requests")

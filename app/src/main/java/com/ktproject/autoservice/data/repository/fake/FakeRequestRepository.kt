@@ -1,54 +1,54 @@
 package com.ktproject.autoservice.data.repository.fake
 
-import com.ktproject.autoservice.data.model.User
-import com.ktproject.autoservice.data.model.LoginRequest
-import com.ktproject.autoservice.data.model.TokenResponse
-import com.ktproject.autoservice.data.repository.UserRepository
+import com.ktproject.autoservice.data.model.Request
 import com.ktproject.autoservice.data.remote.ApiClient
+import com.ktproject.autoservice.data.repository.RequestRepository
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 
-class FakeRequestRepository(private val apiClient: ApiClient) : UserRepository {
+class FakeRequestRepository(
+    private val apiClient: ApiClient,
+    private val userRepository: FakeUserRepository // <-- Вот тут внедрим UserRepository
+) : RequestRepository {
 
-    private val users = mutableListOf<User>(
-        User("1", "user1@example.com", "User One", "admin"),
-        User("2", "user2@example.com", "User Two", "user"),
-        // Добавим еще несколько пользователей
+    private val requests = mutableListOf<Request>(
+        Request("1", "101", "1", "Замена масла", "active"),
+        Request("2", "102", "1", "Диагностика двигателя", "wait"),
+        Request("3", "103", "2", "Ремонт подвески", "completed"),
+        Request("4", "104", "1", "Проверка тормозной системы", "active"),
+        Request("5", "105", "3", "Установка сигнализации", "wait")
     )
 
-    override suspend fun getAllUsers(): List<User> {
+    private suspend fun getCurrentUserId(): String {
+        // Можем тут эмулировать текущего пользователя — например всегда id "1"
+        return userRepository.getCurrentUserId()
+    }
+
+    override suspend fun createRequest(serviceId: Int, description: String): Int {
         delay(500)
-        return users
+        val userId = getCurrentUserId()
+        val newId = (requests.size + 1).toString()
+        val newRequest = Request(newId, serviceId.toString(), userId, description, "wait")
+        requests.add(newRequest)
+        return newId.toInt()
     }
 
-    override suspend fun getUserById(userId: String): User? {
-        delay(1000)
-        return users.find { it.id == userId }
-    }
-
-    override suspend fun addUser(name: String, email: String, role: String) {
+    override suspend fun getMyRequests(): List<Request> {
         delay(300)
-        users.add(User(Random(System.currentTimeMillis()).nextInt(1000, 9999).toString(), name, email, role))
+        val userId = getCurrentUserId()
+        return requests.filter { it.userId == userId }
     }
 
-    override suspend fun updateUser(userId: String, name: String?, email: String?) {
-        name?.let { users.find { it.id == userId }?.name = it }
-        email?.let { users.find { it.id == userId }?.email = it }
-    }
-
-    override suspend fun deleteUser(userId: String) {
+    override suspend fun getAllRequests(): List<Request> {
         delay(300)
-        users.removeIf { it.id == userId }
+        return requests
     }
 
-    // Метод для выполнения логина
-    override suspend fun login(request: LoginRequest): TokenResponse {
-        delay(500)
-        // Имитируем успешный логин и возврат токена
-        if ("test" in request.email) {
-            return TokenResponse("fake-token-12345")
-        } else {
-            throw NumberFormatException("ParseErr")
+    override suspend fun updateRequestStatus(id: Int, status: String, result: String?) {
+        delay(200)
+        val index = requests.indexOfFirst { it.id == id.toString() }
+        if (index != -1) {
+            val oldRequest = requests[index]
+            requests[index] = oldRequest.copy(status = status)
         }
     }
 }

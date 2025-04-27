@@ -3,7 +3,7 @@ package com.ktproject.autoservice.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.Service
-import com.ktproject.autoservice.data.repository.FakeServiceRepository
+import com.ktproject.autoservice.data.repository.fake.FakeServiceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,7 +18,7 @@ class ServicesViewModel : ViewModel() {
 
     private fun loadServices() {
         viewModelScope.launch {
-            _services.value = FakeServiceRepository.getAllServices()
+//            _services.value = FakeServiceRepository.get
         }
     }
 }
