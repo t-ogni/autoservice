@@ -1,5 +1,6 @@
 package com.ktproject.autoservice.data.repository.fake
 
+import com.ktproject.autoservice.data.local.TokenDataStore
 import com.ktproject.autoservice.data.model.Request
 import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.remote.ApiClient
@@ -12,9 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class FakeRequestRepository(
     private val apiClient: ApiClient,
-    private val userRepository: UserRepository // <-- Вот тут внедрим UserRepository
+    private val userRepository: UserRepository
 ) : RequestRepository {
-
     private val requests = mutableListOf<Request>(
 //        Request("1", "101", "1", "Замена масла", "active"),
 //        Request("2", "102", "1", "Диагностика двигателя", "wait"),
@@ -24,14 +24,13 @@ class FakeRequestRepository(
     )
 
     private suspend fun getCurrentUserId(): String {
-        // Можем тут эмулировать текущего пользователя — например всегда id "1"
         return userRepository.getCurrentUserId()?.id.toString()
     }
 
     override suspend fun createRequest(serviceId: String, description: String): String {
         delay(500)
         val userId = getCurrentUserId()
-        val newId = (requests.size + 1).toString()
+        val newId = (requests.maxBy { it.id }.id + 1).toString()
         val newRequest = Request(newId, serviceId.toString(), userId, description, "wait")
         requests.add(newRequest)
         return newId

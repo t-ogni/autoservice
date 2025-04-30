@@ -13,15 +13,17 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.ktproject.autoservice.ui.viewmodel.AuthUiState
 import com.ktproject.autoservice.ui.viewmodel.AuthViewModel
 import org.koin.androidx.compose.getViewModel
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
@@ -29,74 +31,80 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    // Состояния для ввода данных
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val registrationError = remember { mutableStateOf("") }
 
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Регистрация") }) }) {
-        Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
+    val authState = authViewModel.authUiState.collectAsState().value
 
-            // Поле для ввода имени
+    // Навигация по успешной регистрации
+    LaunchedEffect(authViewModel.navigationEvent) {
+        authViewModel.navigationEvent.collect {
+            onRegisterSuccess()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(title = { Text("Регистрация") })
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(it.calculateTopPadding() + 32.dp)
+                .padding(horizontal = 32.dp),
+        ) {
             OutlinedTextField(
                 value = name.value,
                 onValueChange = { name.value = it },
                 label = { Text("Имя") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { /* Focus переключается на следующее поле */ }
-                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Поле для ввода Email
             OutlinedTextField(
                 value = email.value,
                 onValueChange = { email.value = it },
                 label = { Text("Email") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { /* Focus переключается на следующее поле */ }
-                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Поле для ввода Пароля
             OutlinedTextField(
                 value = password.value,
                 onValueChange = { password.value = it },
                 label = { Text("Пароль") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        // Регистрация
-                        authViewModel.login(email.value, password.value)
-                    }
-                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Отображение ошибки регистрации
-            if (registrationError.value.isNotEmpty()) {
-                Text(text = registrationError.value, color = androidx.compose.ui.graphics.Color.Red)
+            // Ошибка
+            if (authState is AuthUiState.Error) {
+                Text(
+                    text = authState.message,
+                    color = androidx.compose.ui.graphics.Color.Red,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
 
-            // Кнопка для регистрации
-            Button(onClick = {
-                authViewModel.login(email.value, password.value)
-            }) {
+            // Кнопка регистрации
+            Button(
+                onClick = {
+                    authViewModel.register(name.value, email.value, password.value)
+                },
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .align(androidx.compose.ui.Alignment.CenterHorizontally)
+            ) {
                 Text("Создать аккаунт")
             }
 
-            // Кнопка для возврата
-            TextButton(onClick = onBackClick) {
+            // Назад
+            TextButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(androidx.compose.ui.Alignment.CenterHorizontally)
+            ) {
                 Text("Назад")
             }
         }

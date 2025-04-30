@@ -1,15 +1,9 @@
 package com.ktproject.autoservice.data.repository.fake
 
 import com.ktproject.autoservice.data.model.User
-import com.ktproject.autoservice.data.model.LoginRequest
-import com.ktproject.autoservice.data.model.Service
-import com.ktproject.autoservice.data.model.TokenResponse
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.data.remote.ApiClient
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
 class FakeUserRepository(
@@ -22,7 +16,7 @@ class FakeUserRepository(
         // Добавим еще несколько пользователей
     )
 
-    private var currentUserId: String = "1" // ← Типа залогинился юзер №1
+    private var currentUserId: String? = null
 
     override suspend fun getCurrentUserId(): User? {
         return users.find { it.id == currentUserId }
@@ -48,6 +42,7 @@ class FakeUserRepository(
     }
 
     override suspend fun updateUser(userId: String, name: String?, email: String?) {
+        delay(300)
         name?.let { users.find { it.id == userId }?.name = it }
         email?.let { users.find { it.id == userId }?.email = it }
     }
@@ -57,18 +52,32 @@ class FakeUserRepository(
         users.removeIf { it.id == userId }
     }
 
-    // Метод для выполнения логина
-    override suspend fun login(request: LoginRequest): TokenResponse {
-        delay(500)
-        // Имитируем успешный логин и возврат токена
-        if ("test" in request.email) {
-            return TokenResponse("fake-token-12345")
+    override suspend fun login(email: String, password: String): Boolean {
+        delay(300)
+        val user = users.find { it.email == email }
+        return if (user != null && password == "password") {
+            currentUserId = user.id
+            apiClient.updateToken("fake-token-${user.id}")
+            true
         } else {
-            throw NumberFormatException("Login failed")
+            false
         }
     }
 
-    override suspend fun logout() {
+    override suspend fun register(name: String, email: String, password: String): Boolean {
+        if (users.any { it.email == email }) return false
+        val newUser = User(Random.nextInt(1000, 9999).toString(), email, name, "user")
+        users.add(newUser)
+        return true
+    }
 
+    override suspend fun logout() {
+        currentUserId = null
+        apiClient.clearToken()
+    }
+
+    override suspend fun isAuthenticated(): Boolean {
+        val token = apiClient.getToken()
+        return !token.isNullOrEmpty()
     }
 }

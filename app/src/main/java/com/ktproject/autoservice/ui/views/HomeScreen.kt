@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavHostController
 import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 import com.ktproject.autoservice.ui.viewmodel.HomeUiState
@@ -31,13 +32,26 @@ fun HomeScreen(
     onCreateRequestClick: () -> Unit,
     onRequestClick: (String) -> Unit,
     onNewsClick: (String) -> Unit,
-    onAdminPanelClick: () -> Unit
+    onAdminPanelClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var backPressedOnce by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
     val coroutineScope = rememberCoroutineScope()
+
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val shouldReload = savedStateHandle?.get<Boolean>("newRequestCreated") ?: false
+
+    if (shouldReload) {
+        savedStateHandle?.set("newRequestCreated", false)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadHomeData()
+    }
+
+
 
     if (uiState.homeUiState == HomeUiState.Loading) {
         // Пока загружаются новости, показываем лоадер

@@ -11,10 +11,11 @@ import org.koin.androidx.compose.getViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.ui.Alignment
 import com.vanpra.composematerialdialogs.*
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectDateTimeScreen(
@@ -24,13 +25,30 @@ fun SelectDateTimeScreen(
     val requestData by viewModel.requestData.collectAsState()
     val busyDates by viewModel.busyDates.collectAsState(initial = emptyList())
 
-    val dateDialogState = rememberMaterialDialogState()
+    val formatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val displayFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
-    LaunchedEffect(Unit) { viewModel.loadBusyDates() }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("Выбор даты") })
-    }) { padding ->
+    val selectedDateFormatted = requestData.selectedDate?.let {
+        try {
+            val date = formatter.parse(it)
+            displayFormatter.format(date!!)
+        } catch (e: Exception) {
+            "Неверная дата"
+        }
+    } ?: ""
+
+    LaunchedEffect(Unit) {
+        viewModel.loadBusyDates()
+    }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(title = { Text("Выбор даты") })
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -39,25 +57,20 @@ fun SelectDateTimeScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val formattedDateText = remember(requestData.selectedDate) {
-                requestData.selectedDate?.let {
-                    try {
-                        val parser = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        val date = parser.parse(it)
-                        val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-                        date?.let { d -> "Выбрано: ${formatter.format(d)}" } ?: "Выбрать дату"
-                    } catch (e: Exception) {
-                        "Неверная дата"
+            OutlinedTextField(
+                value = selectedDateFormatted,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Выберите дату") },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.DateRange, contentDescription = "Открыть календарь")
                     }
-                } ?: "Выбрать дату"
-            }
-
-            Button(
-                onClick = { dateDialogState.show() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = formattedDateText)
-            }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -68,25 +81,48 @@ fun SelectDateTimeScreen(
             ) {
                 Text("Далее")
             }
-        }
-    }
 
-    MaterialDialog(
-        dialogState = dateDialogState,
-        buttons = {
-            positiveButton("Ок")
-            negativeButton("Отмена")
-        }
-    ) {
-        datepicker(
-            allowedDateValidator = { date ->
-                val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val dateString = formatter.format(date)
-                dateString !in busyDates
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        val selectedMillis = datePickerState.selectedDateMillis
+                        val dateStr = selectedMillis?.let { formatter.format(Date(it)) }
+
+                        val isDateAvailable = dateStr != null && dateStr !in busyDates
+
+                        TextButton(
+                            onClick = {
+                                if (dateStr != null) {
+                                    viewModel.updateSelectedDate(dateStr)
+                                }
+                                showDatePicker = false
+                            },
+                            enabled = isDateAvailable
+                        ) {
+                            Text("ОК")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Отмена")
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState, showModeToggle = false)
+                }
+
+                // Подсказка при выборе недоступной даты (опционально)
+                val selectedMillis = datePickerState.selectedDateMillis
+                val dateStr = selectedMillis?.let { formatter.format(Date(it)) }
+                if (dateStr != null && dateStr in busyDates) {
+                    Text(
+                        text = "Эта дата недоступна",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
-        ) { date ->
-            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            viewModel.updateSelectedDate(formatter.format(date))
         }
     }
 }

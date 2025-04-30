@@ -65,6 +65,15 @@ class ApiClient(
     fun updateToken(newToken: String?) {
         token = newToken
     }
+
+    fun clearToken() {
+        token = null
+    }
+
+    fun getToken(): String? {
+        return token
+    }
+
 }
 
 suspend inline fun <reified T : Any> ApiClient.get(path: String): T {

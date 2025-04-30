@@ -112,6 +112,10 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
         composable("create_request/confirm") {
             ConfirmRequestScreen(
                 onSubmit = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("newRequestCreated", true)
+
                     navController.popBackStack("home", inclusive = false)
                 }
             )

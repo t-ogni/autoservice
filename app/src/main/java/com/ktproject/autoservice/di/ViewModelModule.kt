@@ -45,8 +45,8 @@ val viewModelModule = module {
     single<NewsRepository> { FakeNewsRepository(get()) }
     single<RequestRepository> { FakeRequestRepository(get(), get()) }
 
-    viewModel { SplashViewModel(get(), get()) }
-    viewModel { AuthViewModel(get(), get()) }
+    viewModel { SplashViewModel(get()) }
+    viewModel { AuthViewModel(get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
 
     viewModel { ServicesViewModel(get()) }

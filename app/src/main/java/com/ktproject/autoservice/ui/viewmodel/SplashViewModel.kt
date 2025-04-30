@@ -4,12 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.local.TokenDataStore
 import com.ktproject.autoservice.data.remote.ApiClient
+import com.ktproject.autoservice.data.repository.UserRepository
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-
 class SplashViewModel(
-    private val tokenDataStore: TokenDataStore,
-    private val apiClient: ApiClient
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     sealed class SplashState {
@@ -19,26 +18,18 @@ class SplashViewModel(
 
     private var _state: ((SplashState) -> Unit)? = null
 
-    // Метод для наблюдения за состоянием
     fun observeState(listener: (SplashState) -> Unit) {
         _state = listener
     }
 
-    // Проверка наличия токена
     fun checkAuth() {
         viewModelScope.launch {
-            // Получаем токен из DataStore
-            val token = tokenDataStore.token.firstOrNull()
-
-            if (!token.isNullOrEmpty()) {
-                // Если токен есть, обновляем его в ApiClient
-                apiClient.updateToken(token)
-                // Вызываем состояние "Authenticated"
+            if (userRepository.isAuthenticated()) {
                 _state?.invoke(SplashState.Authenticated)
             } else {
-                // Если токен отсутствует, вызываем состояние "Unauthenticated"
                 _state?.invoke(SplashState.Unauthenticated)
             }
         }
     }
 }
+

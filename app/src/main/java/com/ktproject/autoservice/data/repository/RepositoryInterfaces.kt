@@ -23,8 +23,10 @@ interface UserRepository {
     suspend fun addUser(name: String, email: String, role: String)
     suspend fun updateUser(userId: String, name: String?, email: String?)
     suspend fun deleteUser(userId: String)
-    suspend fun login(request: LoginRequest): TokenResponse
     suspend fun logout()
+    suspend fun isAuthenticated(): Boolean
+    suspend fun register(name: String, email: String, password: String): Boolean
+    suspend fun login(email: String, password: String): Boolean
 }
 
 interface ServiceRepository {

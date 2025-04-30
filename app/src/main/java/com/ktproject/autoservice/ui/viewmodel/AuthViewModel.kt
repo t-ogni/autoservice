@@ -16,12 +16,11 @@ import kotlinx.coroutines.launch
 sealed class AuthUiState {
     object Idle : AuthUiState()
     object Loading : AuthUiState()
-    data class Success(val token: String) : AuthUiState()
+    object Success : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
 
 class AuthViewModel(
-    private val tokenDataStore: TokenDataStore,
     private val userRepository: UserRepository,
 ) : ViewModel() {
 
@@ -35,14 +34,34 @@ class AuthViewModel(
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             try {
-                val response = userRepository.login(LoginRequest(email, password))
-                tokenDataStore.saveToken(response.token)
-                _authUiState.value = AuthUiState.Success(response.token)
-                _navigationEvent.emit(Unit)
+                val response = userRepository.login(email, password)
+                if (response == true) {
+                    _authUiState.value = AuthUiState.Success
+                    _navigationEvent.emit(Unit)
+                } else {
+                    _authUiState.value = AuthUiState.Error("Вход не выполнен")
+                }
             } catch (e: Exception) {
                 _authUiState.value = AuthUiState.Error("Ошибка входа: ${e.message}")
 
             }
         }
     }
+    fun register(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            _authUiState.value = AuthUiState.Loading
+            try {
+                val success = userRepository.register(name, email, password)
+                if (success) {
+                    _authUiState.value = AuthUiState.Success
+                    _navigationEvent.emit(Unit)
+                } else {
+                    _authUiState.value = AuthUiState.Error("Email уже используется")
+                }
+            } catch (e: Exception) {
+                _authUiState.value = AuthUiState.Error("Ошибка регистрации: ${e.message}")
+            }
+        }
+    }
+
 }

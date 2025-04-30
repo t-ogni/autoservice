@@ -1,5 +1,6 @@
 package com.ktproject.autoservice.ui.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.News
@@ -37,8 +38,12 @@ class HomeViewModel(
         loadHomeData()
     }
 
-    private fun loadHomeData() {
+    fun loadHomeData() {
         viewModelScope.launch {
+            _uiState.value = HomeUiStateData(
+                homeUiState = HomeUiState.Loading
+            )
+
             val role = userRepository.getUserById("1")?.role ?: "user"
             val requests = requestRepository.getMyRequests()
             val news = newsRepository.getNews()
