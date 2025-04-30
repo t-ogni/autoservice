@@ -1,4 +1,4 @@
-package com.ktproject.autoservice.ui.views
+package com.ktproject.autoservice.ui.views.services
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -66,7 +65,7 @@ fun ServiceRow(service: Service, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = service.title, style = MaterialTheme.typography.bodyLarge)
-            Text(text = "${service.price} ₽", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            Text(text = service.price, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,

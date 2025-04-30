@@ -1,26 +1,34 @@
 package com.ktproject.autoservice
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ktproject.autoservice.ui.views.*
-import com.ktproject.autoservice.ui.views.admin.AdminCreateNewsScreen
+import com.ktproject.autoservice.ui.views.admin.news.AdminCreateNewsScreen
 import com.ktproject.autoservice.ui.views.admin.AdminDashboardScreen
-import com.ktproject.autoservice.ui.views.admin.AdminRequestsScreen
+import com.ktproject.autoservice.ui.views.admin.requests.AdminRequestsScreen
 import com.ktproject.autoservice.ui.views.admin.AdminServicesScreen
-import com.ktproject.autoservice.ui.views.admin.AdminUsersScreen
+import com.ktproject.autoservice.ui.views.admin.user.AdminUsersScreen
+import com.ktproject.autoservice.ui.views.admin.news.AdminEditNewsScreen
+import com.ktproject.autoservice.ui.views.admin.news.ListNewsScreen
+import com.ktproject.autoservice.ui.views.admin.requests.AdminRequestDetailScreen
+import com.ktproject.autoservice.ui.views.admin.user.AdminUserDetailsScreen
 import com.ktproject.autoservice.ui.views.login.LoginScreen
 import com.ktproject.autoservice.ui.views.login.RegisterScreen
 import com.ktproject.autoservice.ui.views.news.NewsDetailScreen
 import com.ktproject.autoservice.ui.views.news.NewsScreen
-import com.ktproject.autoservice.ui.views.request_create.CarInfoCommentScreen
-import com.ktproject.autoservice.ui.views.request_create.ConfirmRequestScreen
-import com.ktproject.autoservice.ui.views.request_create.SelectDateTimeScreen
-import com.ktproject.autoservice.ui.views.request_create.SelectServiceScreen
+import com.ktproject.autoservice.ui.views.profile.EditProfileScreen
+import com.ktproject.autoservice.ui.views.profile.ProfileScreen
+import com.ktproject.autoservice.ui.views.request.MyRequestsScreen
+import com.ktproject.autoservice.ui.views.request.RequestDetailsScreen
+import com.ktproject.autoservice.ui.views.request.request_create.CarInfoCommentScreen
+import com.ktproject.autoservice.ui.views.request.request_create.ConfirmRequestScreen
+import com.ktproject.autoservice.ui.views.request.request_create.SelectDateTimeScreen
+import com.ktproject.autoservice.ui.views.request.request_create.SelectServiceScreen
+import com.ktproject.autoservice.ui.views.services.ServiceDetailsScreen
+import com.ktproject.autoservice.ui.views.services.ServicesScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController, startDestination: String = "splash_screen") {
@@ -77,6 +85,14 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
         // 📅 Создание заявки (многошаговое)
         composable("create_request/service") {
             SelectServiceScreen(
+
+                onNext = { navController.navigate("create_request/datetime") }
+            )
+        }
+        composable("create_request/service/{serviceId}") { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
+            SelectServiceScreen(
+                preselectedServiceId = serviceId,
                 onNext = { navController.navigate("create_request/datetime") }
             )
         }
@@ -129,7 +145,10 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
             val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
             ServiceDetailsScreen(
                 serviceId = serviceId,
-                navController = navController
+                onCreateRequest = { usedServiceId ->
+                    navController.navigate("create_request/service/$usedServiceId")
+                },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -150,14 +169,31 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
         // 👤 Профиль
         composable("profile") {
             ProfileScreen(
-                navController,
-                onLogout = {
+                navController = navController,
+                onLogoutSuccess = {
                     navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                        popUpTo("profile") { inclusive = true }
+                    }
+                },
+                onEditProfileClick = {
+                    navController.navigate("edit_profile")
+                },
+                onMyRequestsClick = {
+                    navController.navigate("my_requests")
+                },
+            )
+        }
+// 👤 Профиль
+        composable("edit_profile") {
+            EditProfileScreen(
+                onProfileUpdated = {
+                    navController.navigate("profile") {
+                        popUpTo("profile")
                     }
                 }
             )
         }
+
 
         // 🔧 Админка
         composable("admin_dashboard") {
@@ -169,9 +205,89 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
             )
         }
 
-        composable("admin_requests") { AdminRequestsScreen() }
-        composable("admin_services") { AdminServicesScreen() }
-        composable("admin_news") { AdminCreateNewsScreen() }
-        composable("admin_users") { AdminUsersScreen() }
+        composable("admin_requests") {
+            AdminRequestsScreen(
+                onRequestClick = { requestId ->
+                    navController.navigate("admin_request_edit/$requestId")
+               }
+            )
+        }
+
+        composable("admin_request_edit/{requestId}") { backStackEntry ->
+            val requestId = backStackEntry.arguments?.getString("requestId") ?: ""
+            AdminRequestDetailScreen(requestId = requestId)
+        }
+
+        composable("admin_services") {
+            AdminServicesScreen()
+        }
+//        composable("admin_news/edit/{newsId}") { backStackEntry ->
+//            val newsId = backStackEntry.arguments?.getString("newsId") ?: ""
+//            AdminEditNewsScreen(
+//                newsId = newsId,
+//                onCancelClick = {navController.popBackStack()},
+//                onSaveClick = {navController.popBackStack()}
+//            )
+//        }
+
+        // ⚙️ Admin Panel
+        composable("admin_dashboard") {
+            AdminDashboardScreen(
+                onAllRequestsClick = { navController.navigate("admin_requests") },
+                onManageServicesClick = { navController.navigate("admin_services") },
+                onManageNewsClick = { navController.navigate("admin_news") },
+                onUsersClick = { navController.navigate("admin_users") }
+            )
+        }
+
+//        // 🛠 Admin Services
+//        composable("admin_services") {
+//            AdminServicesScreen(
+//                onAddServiceClick = { navController.navigate("admin_services/create") },
+//                onEditServiceClick = { serviceId ->
+//                    navController.navigate("admin_services/edit/$serviceId")
+//                }
+//            )
+//        }
+//        composable("admin_services/create") {
+//            AdminCreateServiceScreen(onCreate = { navController.popBackStack() })
+//        }
+//        composable("admin_services/edit/{serviceId}") { backStackEntry ->
+//            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
+//            AdminEditServiceScreen(serviceId = serviceId, onSave = { navController.popBackStack() })
+//        }
+
+        // 📰 Admin News
+        composable("admin_news") {
+            ListNewsScreen(
+                onAddNewsClick = { navController.navigate("admin_news/create") },
+                onEditNewsClick = { newsId -> navController.navigate("admin_news/edit/$newsId") },
+           )
+        }
+        composable("admin_news/create") {
+            AdminCreateNewsScreen(onAddNews = { navController.popBackStack() })
+        }
+        composable("admin_news/edit/{newsId}") { backStackEntry ->
+            val newsId = backStackEntry.arguments?.getString("newsId") ?: ""
+            Log.d("AdminEditNewsScreen", "Received newsId = $newsId")
+            AdminEditNewsScreen(
+                newsId = newsId,
+                onCancelClick = { navController.popBackStack() },
+                onSaveClick = { navController.popBackStack() }
+            )
+        }
+
+        // 👥 Admin Users
+        composable("admin_users") {
+            AdminUsersScreen(
+                onUserClick = { userId ->
+                    navController.navigate("admin_user_details/$userId")
+                }
+            )
+        }
+        composable("admin_user_details/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            AdminUserDetailsScreen(userId = userId)
+        }
     }
 }

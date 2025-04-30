@@ -5,7 +5,9 @@ import com.ktproject.autoservice.data.remote.ApiClient
 import com.ktproject.autoservice.data.repository.NewsRepository
 import kotlinx.coroutines.delay
 
-class FakeNewsRepository(private val apiClient: ApiClient) : NewsRepository {
+class FakeNewsRepository(
+    private val apiClient: ApiClient
+) : NewsRepository {
 
     private val news = mutableListOf(
         News("1", "Скидка 20% на ТО", "Только в мае! Пройдите ТО со скидкой.", "2025-04-01"),
@@ -20,9 +22,9 @@ class FakeNewsRepository(private val apiClient: ApiClient) : NewsRepository {
         return news
     }
 
-    override suspend fun getNewsById(id: Int): News {
+    override suspend fun getNewsById(newsId: String): News {
         delay(200)
-        return news.firstOrNull { it.id == id.toString() }
+        return news.firstOrNull { it.id == newsId }
             ?: throw IllegalArgumentException("Новость не найдена")
     }
 
@@ -33,19 +35,19 @@ class FakeNewsRepository(private val apiClient: ApiClient) : NewsRepository {
         news.add(newNews)
     }
 
-    override suspend fun updateNews(id: Int, title: String, content: String, date: String) {
+    override suspend fun updateNews(newsId: String, title: String, content: String, date: String) {
         delay(400)
-        val index = news.indexOfFirst { it.id == id.toString() }
+        val index = news.indexOfFirst { it.id == newsId }
         if (index != -1) {
-            news[index] = News(id.toString(), title, content, date)
+            news[index] = News(newsId, title, content, date)
         } else {
             throw IllegalArgumentException("Новость для обновления не найдена")
         }
     }
 
-    override suspend fun deleteNews(id: Int) {
+    override suspend fun deleteNews(newsId: String) {
         delay(300)
-        val deleted = news.removeIf { it.id == id.toString() }
+        val deleted = news.removeIf { it.id == newsId }
         if (!deleted) {
             throw IllegalArgumentException("Новость для удаления не найдена")
         }

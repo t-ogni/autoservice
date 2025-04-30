@@ -6,6 +6,7 @@ import com.ktproject.autoservice.data.model.Request
 import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.model.TokenResponse
 import com.ktproject.autoservice.data.model.User
+import com.ktproject.autoservice.data.remote.ApiClient
 import kotlinx.coroutines.delay
 
 
@@ -17,11 +18,13 @@ import kotlinx.coroutines.delay
 
 interface UserRepository {
     suspend fun getAllUsers(): List<User>
+    suspend fun getCurrentUserId(): User?
     suspend fun getUserById(userId: String): User?
     suspend fun addUser(name: String, email: String, role: String)
     suspend fun updateUser(userId: String, name: String?, email: String?)
     suspend fun deleteUser(userId: String)
     suspend fun login(request: LoginRequest): TokenResponse
+    suspend fun logout()
 }
 
 interface ServiceRepository {
@@ -32,16 +35,16 @@ interface ServiceRepository {
 }
 
 interface RequestRepository {
-    suspend fun createRequest(serviceId: Int, description: String): Int
+    suspend fun createRequest(serviceId: String, description: String): String
     suspend fun getMyRequests(): List<Request>
     suspend fun getAllRequests(): List<Request>
-    suspend fun updateRequestStatus(id: Int, status: String, result: String?)
+    suspend fun updateRequestStatus(requestId: String, status: String, result: String?)
 }
 
 interface NewsRepository {
     suspend fun getNews(): List<News>
-    suspend fun getNewsById(id: Int): News
+    suspend fun getNewsById(newsId: String): News
     suspend fun addNews(title: String, content: String, date: String)
-    suspend fun updateNews(id: Int, title: String, content: String, date: String)
-    suspend fun deleteNews(id: Int)
+    suspend fun updateNews(newsId: String, title: String, content: String, date: String)
+    suspend fun deleteNews(newsId: String)
 }

@@ -1,21 +1,30 @@
 package com.ktproject.autoservice.data.repository.fake
 
 import com.ktproject.autoservice.data.model.Service
+import com.ktproject.autoservice.data.remote.ApiClient
 import com.ktproject.autoservice.data.repository.ServiceRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
-
-class FakeServiceRepository : ServiceRepository {
+class FakeServiceRepository(
+    private val apiClient: ApiClient
+) : ServiceRepository {
     private val services = mutableListOf<Service>(
-        Service("1", "Замена масла", "Быстрая и качественная замена масла в двигателе", "1000"),
-        Service("2", "Диагностика", "Полная компьютерная диагностика авто", "1000"),
-        Service("3", "Шиномонтаж", "Сезонная замена шин и балансировка", "1000"),
-        Service("4", "Замена тормозов", "Проверка и замена тормозных колодок и дисков", "30 000"),
-        Service("5", "Мойка", "Быстрая наружная и внутренняя мойка", "1000"),
-        Service("6", "Ремонт подвески", "Диагностика и ремонт подвески", "1000"),
-        Service("7", "Покраска", "Локальная и полная покраска кузова", "1000"),
-        Service("8", "Зарядка кондиционера", "Заправка и обслуживание кондиционера", "1000"),
+        Service("1", "Замена масла", "Быстрая и качественная замена масла в двигателе", "1000 ₽"),
+        Service("2", "Диагностика", "Полная компьютерная диагностика авто", "1000 ₽"),
+        Service("3", "Шиномонтаж", "Сезонная замена шин и балансировка", "1000 ₽"),
+        Service("4", "Замена тормозов", "Проверка и замена тормозных колодок и дисков", "30 000 ₽"),
+        Service("5", "Мойка", "Быстрая наружная и внутренняя мойка", "Договорная"),
+        Service("6", "Ремонт подвески", "Диагностика и ремонт подвески", "1000 ₽"),
+        Service("7", "Покраска", "Локальная и полная покраска кузова", "1000 ₽"),
+        Service("8", "Зарядка кондиционера", "Заправка и обслуживание кондиционера", "от 5000 ₽"),
+        Service("9", "Зарядка кондиционера2", "Заправка и обслуживание кондиционера", "от 5000 ₽"),
+        Service("10", "Зарядка кондиционера3", "Заправка и обслуживание кондиционера", "от 5000 ₽"),
+        Service("11", "Зарядка кондиционерa4", "Заправка и обслуживание кондиционера", "от 5000 ₽"),
+
     )
 
     override suspend fun getServiceById(serviceId: String): Service? {

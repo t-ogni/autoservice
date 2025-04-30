@@ -2,13 +2,19 @@ package com.ktproject.autoservice.data.repository.fake
 
 import com.ktproject.autoservice.data.model.User
 import com.ktproject.autoservice.data.model.LoginRequest
+import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.model.TokenResponse
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.data.remote.ApiClient
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
-class FakeUserRepository(private val apiClient: ApiClient) : UserRepository {
+class FakeUserRepository(
+    private val apiClient: ApiClient
+) : UserRepository {
 
     private val users = mutableListOf<User>(
         User("1", "user1@example.com", "User One", "admin"),
@@ -18,8 +24,8 @@ class FakeUserRepository(private val apiClient: ApiClient) : UserRepository {
 
     private var currentUserId: String = "1" // ← Типа залогинился юзер №1
 
-    fun getCurrentUserId(): String {
-        return currentUserId
+    override suspend fun getCurrentUserId(): User? {
+        return users.find { it.id == currentUserId }
     }
 
     fun setCurrentUser(userId: String) {
@@ -58,7 +64,11 @@ class FakeUserRepository(private val apiClient: ApiClient) : UserRepository {
         if ("test" in request.email) {
             return TokenResponse("fake-token-12345")
         } else {
-            throw NumberFormatException("ParseErr")
+            throw NumberFormatException("Login failed")
         }
+    }
+
+    override suspend fun logout() {
+
     }
 }

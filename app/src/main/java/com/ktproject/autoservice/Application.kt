@@ -11,7 +11,7 @@
 
             startKoin {
                 androidContext(this@App)
-                modules(appModule, viewModelModule)
+                modules(viewModelModule)
             }
         }
     }

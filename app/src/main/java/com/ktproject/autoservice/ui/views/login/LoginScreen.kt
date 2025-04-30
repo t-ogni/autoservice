@@ -1,6 +1,5 @@
 package com.ktproject.autoservice.ui.views.login
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -9,15 +8,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.ktproject.autoservice.ui.viewmodel.AuthViewModel
-import com.ktproject.autoservice.ui.viewmodel.UiState
+import com.ktproject.autoservice.ui.viewmodel.AuthUiState
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +39,7 @@ fun LoginScreen(
     val password = remember { mutableStateOf("") }
     val loginError = remember { mutableStateOf("") }
 
-    val uiState by authViewModel.uiState.collectAsState()
+    val uiState by authViewModel.authUiState.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect (Unit) {
@@ -94,13 +90,13 @@ fun LoginScreen(
 
 
             when (uiState) {
-                is UiState.Loading -> {
+                is AuthUiState.Loading -> {
                     CircularProgressIndicator()
                 }
 
-                is UiState.Error -> {
+                is AuthUiState.Error -> {
                     Text(
-                        text = (uiState as UiState.Error).message,
+                        text = (uiState as AuthUiState.Error).message,
                         color = Color.Red
                     )
                 }

@@ -11,7 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class HomeUiState(
+sealed class HomeUiState {
+    object Idle : HomeUiState()
+    object Loading : HomeUiState()
+    object Success : HomeUiState()
+}
+
+data class HomeUiStateData(
+    val homeUiState: HomeUiState = HomeUiState.Loading,
     val userRole: String = "",
     val myRequests: List<Request> = emptyList(),
     val newsList: List<News> = emptyList()
@@ -23,8 +30,8 @@ class HomeViewModel(
     private val requestRepository: RequestRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState
+    private val _uiState = MutableStateFlow(HomeUiStateData())
+    val uiState: StateFlow<HomeUiStateData> = _uiState
 
     init {
         loadHomeData()
@@ -36,7 +43,8 @@ class HomeViewModel(
             val requests = requestRepository.getMyRequests()
             val news = newsRepository.getNews()
 
-            _uiState.value = HomeUiState(
+            _uiState.value = HomeUiStateData(
+                homeUiState = HomeUiState.Idle,
                 userRole = role,
                 myRequests = requests,
                 newsList = news

@@ -19,7 +19,8 @@ data class Request(
     val serviceId: String,
     val userId: String,
     val description: String,
-    val status: String
+    val status: String,
+    val result: String = ""
 )
 
 data class News(
