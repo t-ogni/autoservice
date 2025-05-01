@@ -18,13 +18,19 @@ import org.koin.androidx.compose.getViewModel
 @Composable
 fun MyRequestsScreen(
     viewModel : MyRequestsViewModel = getViewModel(),
+    onNewRequestClick: () -> Unit,
     onRequestClick: (String) -> Unit
 ) {
     val state by viewModel.requestsState.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = { Text("Мои заявки") })
+            CenterAlignedTopAppBar(title = { Text("Мои заявки") },
+                actions = {
+                IconButton(onClick = onNewRequestClick) {
+                    Text("+", style = MaterialTheme.typography.headlineMedium)
+                }
+            })
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
