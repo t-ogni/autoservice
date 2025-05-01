@@ -1,16 +1,12 @@
 package com.ktproject.autoservice.ui.viewmodel
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.User
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.ui.components.UIState
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
@@ -31,7 +27,7 @@ class ProfileViewModel(
         viewModelScope.launch {
             try {
                 _userState.value = UIState.Loading
-                val user = userRepository.getCurrentUserId()
+                val user = userRepository.getCurrentUser()
                 if (user != null) {
                     _userState.value = UIState.Success(user)
                 } else {

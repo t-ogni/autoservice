@@ -32,7 +32,7 @@ class UserViewModel(
 
     fun updateUser(userId: String, name: String?, email: String?) {
         viewModelScope.launch {
-            userRepository.updateUser(userId, name, email)
+            userRepository.updateUser(userId, name, email, null)
             loadAllUsers() // перезагружаем список
             loadUserById(userId) // перезагружаем пользователя
         }

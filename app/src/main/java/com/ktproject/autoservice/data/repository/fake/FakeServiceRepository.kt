@@ -37,14 +37,14 @@ class FakeServiceRepository(
         return services
     }
 
-    override suspend fun addService(name: String, description: String, price: Int) {
+    override suspend fun addService(name: String, description: String, price: String) {
         delay(300)
         services.add(
             Service(
                 id = Random(System.currentTimeMillis()).nextInt(1000, 9999).toString(),
                 title = name,
                 description = description,
-                price = price.toString()
+                price = price
             )
         )
     }

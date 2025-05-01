@@ -6,31 +6,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Delete
 import com.ktproject.autoservice.data.model.News
-import com.ktproject.autoservice.ui.viewmodel.NewsViewModel
+import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.ui.components.UIState
+import com.ktproject.autoservice.ui.viewmodel.AdminNewsViewModel
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListNewsScreen(
-    newsViewModel: NewsViewModel = getViewModel(),
+    newsViewModel: AdminNewsViewModel = getViewModel(),
     onAddNewsClick: () -> Unit,
     onEditNewsClick: (String) -> Unit,
 ) {
-    val newsList by newsViewModel.newsList.collectAsState(emptyList())
+    val newsState by newsViewModel.newsListState.collectAsState()
 
     LaunchedEffect(Unit) {
         newsViewModel.loadNews()
-    }
-
-    newsList.forEach {
-        Log.d("ListNewsScreen", "News id = ${it.id}, title = ${it.title}")
     }
 
     Scaffold(
@@ -45,17 +41,32 @@ fun ListNewsScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            items(newsList) { news ->
-                NewsItem(
-                    news = news,
-                    onEditClick = { onEditNewsClick(news.id) },
-                    onDeleteClick = { newsViewModel.deleteNews(news.id) }
-                )
+        when (newsState) {
+            is UIState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is UIState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Ошибка загрузки новостей", color = Color.Red)
+                }
+            }
+            is UIState.Success -> {
+                val newsList = (newsState as UIState.Success<List<News>>).data
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(16.dp)
+                ) {
+                    items(newsList) { news ->
+                        NewsItem(
+                            news = news,
+                            onEditClick = { onEditNewsClick(news.id) },
+                            onDeleteClick = { newsViewModel.deleteNews(news.id) }
+                        )
+                    }
+                }
             }
         }
     }

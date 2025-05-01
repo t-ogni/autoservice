@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.local.TokenDataStore
 import com.ktproject.autoservice.data.model.LoginRequest
+import com.ktproject.autoservice.data.repository.ResultState
 import com.ktproject.autoservice.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,33 +34,31 @@ class AuthViewModel(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
-            try {
-                val response = userRepository.login(email, password)
-                if (response == true) {
+            when (val result = userRepository.login(email, password)) {
+                is ResultState.Success -> {
                     _authUiState.value = AuthUiState.Success
                     _navigationEvent.emit(Unit)
-                } else {
-                    _authUiState.value = AuthUiState.Error("Вход не выполнен")
                 }
-            } catch (e: Exception) {
-                _authUiState.value = AuthUiState.Error("Ошибка входа: ${e.message}")
-
+                is ResultState.Error -> {
+                    _authUiState.value = AuthUiState.Error(result.message)
+                }
+                ResultState.Loading -> {} // обычно не приходит сюда
             }
         }
     }
+
     fun register(name: String, email: String, password: String) {
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
-            try {
-                val success = userRepository.register(name, email, password)
-                if (success) {
+            when (val result = userRepository.register(name, email, password)) {
+                is ResultState.Success -> {
                     _authUiState.value = AuthUiState.Success
                     _navigationEvent.emit(Unit)
-                } else {
-                    _authUiState.value = AuthUiState.Error("Email уже используется")
                 }
-            } catch (e: Exception) {
-                _authUiState.value = AuthUiState.Error("Ошибка регистрации: ${e.message}")
+                is ResultState.Error -> {
+                    _authUiState.value = AuthUiState.Error(result.message)
+                }
+                ResultState.Loading -> {} // обычно не приходит сюда
             }
         }
     }

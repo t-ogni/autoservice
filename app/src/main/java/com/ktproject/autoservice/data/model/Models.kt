@@ -11,15 +11,16 @@ data class User(
     val id: String,
     var name: String,
     var email: String,
-    val role: String
+    var role: String
 )
-
 data class Request(
     val id: String,
     val serviceId: String,
     val userId: String,
     val description: String,
     val status: String,
+    val date: String,       // yyyy-MM-dd
+    val time: String,       // HH:mm
     val result: String = ""
 )
 

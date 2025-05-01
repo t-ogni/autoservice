@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -25,70 +24,89 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.ktproject.autoservice.data.model.News
-import com.ktproject.autoservice.ui.viewmodel.NewsViewModel
+import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.ui.components.ErrorSnackbar
+import com.ktproject.autoservice.ui.components.UIState
+import com.ktproject.autoservice.ui.viewmodel.AdminNewsViewModel
 import org.koin.androidx.compose.getViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminEditNewsScreen(
     newsId: String,
-    newsViewModel: NewsViewModel = getViewModel(),
+    newsViewModel: AdminNewsViewModel = getViewModel(),
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        newsViewModel.loadNews()
+    LaunchedEffect(newsId) {
+        newsViewModel.getNewsById(newsId)
     }
 
-    val news by newsViewModel.getNewsByIdFlow(newsId).collectAsState(initial = null)
+    val newsState by newsViewModel.selectedNewsState.collectAsState()
 
-
-    if (news == null) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            CircularProgressIndicator()
+    when (newsState) {
+        is UIState.Loading -> {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                CircularProgressIndicator()
+            }
         }
-    } else {
-        val titleState = remember(news!!.title) { mutableStateOf(TextFieldValue(news!!.title)) }
-        val contentState = remember(news!!.content) { mutableStateOf(TextFieldValue(news!!.content)) }
 
-        Scaffold(
-            topBar = { CenterAlignedTopAppBar(title = { Text("Редактировать новость") }) }
-        ) {
-            Column(modifier = Modifier.padding(top = it.calculateTopPadding(), start = 16.dp, end = 16.dp, bottom = it.calculateBottomPadding())) {
-                Text("Заголовок новости:")
-                TextField(
-                    value = titleState.value,
-                    onValueChange = { titleState.value = it },
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    placeholder = { Text("Введите заголовок") }
-                )
+        is UIState.Error -> {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Text("Ошибка загрузки: ${(newsState as UIState.Error).message}")
+            }
+        }
 
-                Text("Содержание новости:")
-                TextField(
-                    value = contentState.value,
-                    onValueChange = { contentState.value = it },
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    placeholder = { Text("Введите содержание новости") }
-                )
+        is UIState.Success -> {
+            val news = (newsState as UIState.Success).data
+            val titleState = remember(news.title) { mutableStateOf(TextFieldValue(news.title)) }
+            val contentState = remember(news.content) { mutableStateOf(TextFieldValue(news.content)) }
 
-                Row(modifier = Modifier.padding(top = 16.dp)) {
-                    Button(onClick = {
-                        newsViewModel.updateNews(
-                            news!!.id,
-                            titleState.value.text,
-                            contentState.value.text,
-                            news!!.date
-                        )
-                        onSaveClick()
-                    }) {
-                        Text("Сохранить")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = onCancelClick) {
-                        Text("Отменить")
+            Scaffold(
+                topBar = { CenterAlignedTopAppBar(title = { Text("Редактировать новость") }) }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    Text("Заголовок новости:")
+                    TextField(
+                        value = titleState.value,
+                        onValueChange = { titleState.value = it },
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        placeholder = { Text("Введите заголовок") }
+                    )
+
+                    Text("Содержание новости:")
+                    TextField(
+                        value = contentState.value,
+                        onValueChange = { contentState.value = it },
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        placeholder = { Text("Введите содержание новости") }
+                    )
+
+                    Row(modifier = Modifier.padding(top = 16.dp)) {
+                        Button(onClick = {
+                            newsViewModel.updateNews(
+                                newsId = news.id,
+                                title = titleState.value.text,
+                                content = contentState.value.text,
+                                date = news.date,
+                                onSuccess = onSaveClick,
+                                onError = { message ->
+
+                                    println("Ошибка обновления: $message")
+                                }
+                            )
+                        }) {
+                            Text("Сохранить")
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Button(onClick = onCancelClick) {
+                            Text("Отменить")
+                        }
                     }
                 }
             }

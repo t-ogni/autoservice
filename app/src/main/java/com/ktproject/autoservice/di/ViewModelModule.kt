@@ -11,6 +11,7 @@ import com.ktproject.autoservice.data.repository.fake.FakeNewsRepository
 import com.ktproject.autoservice.data.repository.fake.FakeRequestRepository
 import com.ktproject.autoservice.data.repository.fake.FakeServiceRepository
 import com.ktproject.autoservice.data.repository.fake.FakeUserRepository
+import com.ktproject.autoservice.data.repository.in_memory.NewRequestDraftRepository
 import com.ktproject.autoservice.ui.viewmodel.AdminRequestsViewModel
 import com.ktproject.autoservice.ui.viewmodel.AdminUsersViewModel
 import com.ktproject.autoservice.ui.viewmodel.AuthViewModel
@@ -19,14 +20,13 @@ import com.ktproject.autoservice.ui.viewmodel.EditUserViewModel
 import com.ktproject.autoservice.ui.viewmodel.HomeViewModel
 import com.ktproject.autoservice.ui.viewmodel.MyRequestsViewModel
 import com.ktproject.autoservice.ui.viewmodel.NewRequestViewModel
-import com.ktproject.autoservice.ui.viewmodel.NewsViewModel
+import com.ktproject.autoservice.ui.viewmodel.AdminNewsViewModel
+import com.ktproject.autoservice.ui.viewmodel.AdminServiceViewModel
 import com.ktproject.autoservice.ui.viewmodel.ProfileViewModel
 import com.ktproject.autoservice.ui.viewmodel.ServicesViewModel
 import com.ktproject.autoservice.ui.viewmodel.SplashViewModel
 import com.ktproject.autoservice.ui.viewmodel.UserRequestsViewModel
 import com.ktproject.autoservice.ui.viewmodel.UserViewModel
-import com.ktproject.autoservice.ui.views.admin.requests.AdminRequestDetailScreen
-import com.ktproject.autoservice.ui.views.admin.user.AdminUserDetailsScreen
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -45,12 +45,18 @@ val viewModelModule = module {
     single<NewsRepository> { FakeNewsRepository(get()) }
     single<RequestRepository> { FakeRequestRepository(get(), get()) }
 
+    // Репозиторий черновиков (один на всё приложение)
+    single { NewRequestDraftRepository() }
+
     viewModel { SplashViewModel(get()) }
     viewModel { AuthViewModel(get()) }
+
     viewModel { HomeViewModel(get(), get(), get()) }
 
+    viewModel { AdminNewsViewModel(get()) }
+
     viewModel { ServicesViewModel(get()) }
-    viewModel { NewsViewModel(get()) }
+    viewModel { AdminServiceViewModel(get()) }
 
     viewModel { ProfileViewModel(get()) }
     viewModel { EditProfileViewModel(get()) }
@@ -63,6 +69,6 @@ val viewModelModule = module {
     viewModel { AdminRequestsViewModel(get()) }
     viewModel { UserRequestsViewModel(get()) }
 
-    viewModel { NewRequestViewModel(get(), get(), get()) }
+    viewModel { NewRequestViewModel(get(), get(), get(), get()) }
 
 }

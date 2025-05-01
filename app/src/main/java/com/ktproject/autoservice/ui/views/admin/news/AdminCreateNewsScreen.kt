@@ -15,7 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.ktproject.autoservice.ui.viewmodel.NewsViewModel
+import com.ktproject.autoservice.ui.viewmodel.AdminNewsViewModel
 import org.koin.androidx.compose.getViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -23,7 +23,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminCreateNewsScreen(
-    newsViewModel: NewsViewModel = getViewModel(),
+    newsViewModel: AdminNewsViewModel = getViewModel(),
     onAddNews: () -> Unit,
 ) {
     val title = remember { mutableStateOf(TextFieldValue()) }

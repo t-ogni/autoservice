@@ -24,7 +24,7 @@ class EditProfileViewModel(
         viewModelScope.launch {
             try {
                 _userState.value = UIState.Loading
-                val user = userRepository.getCurrentUserId()
+                val user = userRepository.getCurrentUser()
                 if (user != null) {
                     _userState.value = UIState.Success(user)
                 } else {
@@ -41,7 +41,7 @@ class EditProfileViewModel(
             try {
                 val user = (userState.value as? UIState.Success)?.data
                 user?.let {
-                    userRepository.updateUser(it.id, name, email)
+                    userRepository.updateUser(it.id, name, email, user.role)
                     loadUser() // Перезагрузить обновленные данные
                 }
             } catch (e: Exception) {

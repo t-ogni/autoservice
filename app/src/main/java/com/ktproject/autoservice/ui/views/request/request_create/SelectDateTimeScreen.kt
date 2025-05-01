@@ -31,6 +31,10 @@ fun SelectDateTimeScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
+    val timeSlots = (9..18).map { String.format("%02d:00", it) }
+    var expanded by remember { mutableStateOf(false) }
+    val selectedTime = requestData.selectedTime ?: ""
+
     val selectedDateFormatted = requestData.selectedDate?.let {
         try {
             val date = formatter.parse(it)
@@ -74,9 +78,54 @@ fun SelectDateTimeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = selectedTime,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Выберите время") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Открыть список времени")
+                        }
+                    }
+                )
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    timeSlots.forEach { time ->
+                        DropdownMenuItem(
+                            text = { Text(time) },
+                            onClick = {
+                                viewModel.updateSelectedTime(time)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
-                onClick = onNext,
-                enabled = requestData.selectedDate != null,
+                onClick = {
+                    val selectedMillis = datePickerState.selectedDateMillis
+                    val dateStr = selectedMillis?.let { formatter.format(Date(it)) }
+
+                    if (dateStr != null) {
+                        viewModel.updateSelectedDate(dateStr)
+                    }
+
+                    viewModel.updateSelectedTime(selectedTime)
+                    onNext()
+                },
+                enabled = requestData.selectedDate != null && requestData.selectedTime != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Далее")

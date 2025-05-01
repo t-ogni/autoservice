@@ -29,24 +29,17 @@ fun CarInfoCommentScreen(
     val requestData by viewModel.requestData.collectAsState()
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Информация об авто") }) }) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(24.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(padding).padding(24.dp)) {
             TextField(
-                value = requestData.carBrand,
-                onValueChange = { viewModel.updateCarInfo(it, requestData.carModel, requestData.comment) },
+                value = requestData.carModel,
+                onValueChange = { viewModel.updateCarInfo(it, requestData.comment) },
                 label = { Text("Марка авто") },
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             TextField(
-                value = requestData.carModel,
-                onValueChange = { viewModel.updateCarInfo(requestData.carBrand, it, requestData.comment) },
-                label = { Text("Модель авто") },
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            TextField(
                 value = requestData.comment,
-                onValueChange = { viewModel.updateCarInfo(requestData.carBrand, requestData.carModel, it) },
+                onValueChange = { viewModel.updateCarInfo(requestData.carModel, it) },
                 label = { Text("Комментарий") },
                 modifier = Modifier.padding(bottom = 24.dp)
             )

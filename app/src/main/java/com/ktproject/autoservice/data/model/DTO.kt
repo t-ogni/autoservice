@@ -11,7 +11,7 @@ data class ApiResponse<T>(
 )
 
 @Serializable
-data class ExposedNews(
+data class GetNews(
     val id: Int,
     val title: String,
     val content: String,
@@ -19,7 +19,7 @@ data class ExposedNews(
 )
 
 @Serializable
-data class ExposedRequest(
+data class GetRequest(
     val id: Int,
     val userId: Int,
     val serviceId: Int,
@@ -31,7 +31,7 @@ data class ExposedRequest(
 )
 
 @Serializable
-data class ExposedService(
+data class GetService(
     val id: Int,
     val name: String,
     val price: Double,
@@ -39,7 +39,7 @@ data class ExposedService(
 )
 
 @Serializable
-data class ExposedUser(
+data class GetUser(
     val id: Int,
     val name: String,
     val email: String,

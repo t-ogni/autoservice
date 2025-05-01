@@ -1,17 +1,12 @@
 package com.ktproject.autoservice.ui.views.request.request_create
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,7 +37,7 @@ fun SelectServiceScreen(
     onNext: () -> Unit,
     preselectedServiceId: String? = null // Передаваемый параметр
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val servicesState by viewModel.servicesState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadServices(preselectedServiceId)
@@ -53,7 +48,7 @@ fun SelectServiceScreen(
             CenterAlignedTopAppBar(title = { Text("Выбор услуги") })
         },
         bottomBar = {
-            if (uiState is UIState.Success && (uiState as UIState.Success<List<Service>>).data.isNotEmpty()) {
+            if (servicesState is UIState.Success && (servicesState as UIState.Success<List<Service>>).data.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -79,7 +74,7 @@ fun SelectServiceScreen(
             )
             .fillMaxSize()
         ) {
-            when (uiState) {
+            when (servicesState) {
                 is UIState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
@@ -93,7 +88,7 @@ fun SelectServiceScreen(
                 }
 
                 is UIState.Success -> {
-                    val services = (uiState as UIState.Success<List<Service>>).data
+                    val services = (servicesState as UIState.Success<List<Service>>).data
                     val selectedServiceId = viewModel.requestData.collectAsState().value.selectedServiceId
 
                     LazyColumn(modifier = Modifier.fillMaxSize()) {

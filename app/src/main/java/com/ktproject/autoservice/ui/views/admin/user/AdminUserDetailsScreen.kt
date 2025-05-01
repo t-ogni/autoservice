@@ -10,7 +10,6 @@ import com.ktproject.autoservice.data.model.User
 import com.ktproject.autoservice.ui.components.UIState
 import com.ktproject.autoservice.ui.viewmodel.EditUserViewModel
 import org.koin.androidx.compose.getViewModel
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUserDetailsScreen(
@@ -20,6 +19,10 @@ fun AdminUserDetailsScreen(
     val userState by viewModel.userState.collectAsState()
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("user") }
+
+    var expanded by remember { mutableStateOf(false) }
+    val roles = listOf("user", "admin")
 
     LaunchedEffect(userId) {
         viewModel.loadUser(userId)
@@ -28,8 +31,11 @@ fun AdminUserDetailsScreen(
     LaunchedEffect(userState) {
         if (userState is UIState.Success) {
             val user = (userState as UIState.Success<User?>).data
-            name = user!!.name
-            email = user.email
+            user?.let {
+                name = it.name
+                email = it.email
+                role = it.role ?: "user"
+            }
         }
     }
 
@@ -65,8 +71,39 @@ fun AdminUserDetailsScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // Выпадающий список для роли
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = role,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Роль") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            roles.forEach { selection ->
+                                DropdownMenuItem(
+                                    text = { Text(selection) },
+                                    onClick = {
+                                        role = selection
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
                     Button(
-                        onClick = { viewModel.updateUser(userId, name, email) },
+                        onClick = {
+                            viewModel.updateUser(userId, name, email, role)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Сохранить")

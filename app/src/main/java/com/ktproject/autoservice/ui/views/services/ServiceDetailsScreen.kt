@@ -84,8 +84,9 @@ fun ServiceDetailsScreen(
                         onClick = { onCreateRequest(service.id) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
-                            , shape = ShapeDefaults.Small
+                            .systemBarsPadding()
+                            .padding(16.dp),
+                        shape = ShapeDefaults.Small
                     ) {
                         Text("Оставить заявку")
                     }
