@@ -1,20 +1,74 @@
 package com.ktproject.autoservice.ui.views.news
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.viewinterop.AndroidView
+import com.ktproject.autoservice.ui.components.UIState
+import com.ktproject.autoservice.ui.viewmodel.NewsDetailViewModel
+import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewsDetailScreen(newsId: String) {
-    Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("Новость #$newsId") }) }) {
-        Column(modifier = Modifier.padding(it.calculateTopPadding() + 16.dp)) {
+fun NewsDetailScreen(
+    newsId: String,
+    viewModel: NewsDetailViewModel = getViewModel()
+) {
+    val state by viewModel.newsState.collectAsState()
+
+    LaunchedEffect(newsId) {
+        viewModel.loadNews(newsId)
+    }
+    when (state) {
+        is UIState.Loading ->  {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is UIState.Success -> {
+            val news = (state as UIState.Success).data
+    Scaffold { innerPadding ->
+        Box(modifier = Modifier
+            .padding(innerPadding)
+            .padding(16.dp)
+        ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(text = news.title, style = MaterialTheme.typography.headlineSmall)
+                        Text(text = news.date, style = MaterialTheme.typography.labelMedium)
+
+                        AndroidView(
+                            factory = { context ->
+                                WebView(context).apply {
+                                    webViewClient = WebViewClient()
+                                    loadDataWithBaseURL(
+                                        null,
+                                        news.content,
+                                        "text/html",
+                                        "utf-8",
+                                        null
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+            }
+        }
+        is UIState.Error -> {
+            Text("Ошибка: ${(state as UIState.Error).message}")
         }
     }
 }

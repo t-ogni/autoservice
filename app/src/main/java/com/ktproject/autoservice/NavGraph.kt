@@ -20,7 +20,6 @@ import com.ktproject.autoservice.ui.views.admin.user.AdminUserDetailsScreen
 import com.ktproject.autoservice.ui.views.login.LoginScreen
 import com.ktproject.autoservice.ui.views.login.RegisterScreen
 import com.ktproject.autoservice.ui.views.news.NewsDetailScreen
-import com.ktproject.autoservice.ui.views.news.NewsScreen
 import com.ktproject.autoservice.ui.views.profile.EditProfileScreen
 import com.ktproject.autoservice.ui.views.profile.ProfileScreen
 import com.ktproject.autoservice.ui.views.request.MyRequestsScreen
@@ -64,7 +63,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
             RegisterScreen(
                 onRegisterSuccess = {
                     navController.navigate("home"){
-                        popUpTo("login") { inclusive = true }
+                        popUpTo("register") { inclusive = true }
                     }
                 },
                 onBackClick = { navController.popBackStack() }
@@ -79,7 +78,7 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
                 onRequestClick = { requestId ->
                     navController.navigate("request_details/$requestId")
                 },
-                onNewsClick = { navController.navigate("news") },
+                onNewsClick = { newsId -> navController.navigate("news_details/$newsId") },
                 onAdminPanelClick = { navController.navigate("admin_dashboard") }
             )
         }
@@ -159,14 +158,6 @@ fun AppNavGraph(navController: NavHostController, startDestination: String = "sp
             )
         }
 
-        // 📰 Новости
-        composable("news") {
-            NewsScreen(
-                onNewsClick = { newsId ->
-                    navController.navigate("news_details/$newsId")
-                }
-            )
-        }
 
         composable("news_details/{newsId}") { backStackEntry ->
             val newsId = backStackEntry.arguments?.getString("newsId") ?: ""

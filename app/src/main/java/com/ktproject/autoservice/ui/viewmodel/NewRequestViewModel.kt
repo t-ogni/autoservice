@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.repository.*
 import com.ktproject.autoservice.data.model.*
-import com.ktproject.autoservice.data.repository.in_memory.NewRequestDraftRepository
+import com.ktproject.autoservice.data.repository.runtime.NewRequestDraftRepository
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

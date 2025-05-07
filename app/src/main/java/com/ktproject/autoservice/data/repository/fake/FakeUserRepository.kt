@@ -16,6 +16,12 @@ class FakeUserRepository(
         User("2", "User Two", "user2@gmail.com", "user")
     )
 
+    private val passwords = mutableListOf<Pair<String, String>>(
+        Pair("1", "123"),
+        Pair("2", "1"),
+    )
+
+
     private var currentUserId: String? = null
 
     override suspend fun getCurrentUser(): User? {
@@ -59,7 +65,7 @@ class FakeUserRepository(
         delay(300)
         val user = users.find { it.email == email }
         if (user != null) {
-            if (password == "password") {
+            if (password == (passwords.find { user.id == it.first }?.second ?: "nf")) {
                 currentUserId = user.id
                 apiClient.updateToken("fake-token-${user.id}")
                 return ResultState.Success(Unit)
@@ -72,11 +78,15 @@ class FakeUserRepository(
     }
 
     override suspend fun register(name: String, email: String, password: String): ResultState<Unit> {
+        delay(500)
         if (users.any { it.email == email })
             return ResultState.Error("Email уже используется")
 
         val newUser = User(Random.nextInt(1000, 9999).toString(), email, name, "user")
         users.add(newUser)
+        currentUserId = newUser.id
+        passwords.add(Pair(newUser.id, password))
+        apiClient.updateToken("fake-token-${newUser.id}")
         return ResultState.Success(Unit)
     }
 

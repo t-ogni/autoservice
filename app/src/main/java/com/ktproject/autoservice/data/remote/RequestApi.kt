@@ -1,27 +1,33 @@
 package com.ktproject.autoservice.data.remote
 
-import com.ktproject.autoservice.data.model.GetRequest
+import com.ktproject.autoservice.data.model.ApiResponse
+import com.ktproject.autoservice.data.model.CreateRequestRequest
 import com.ktproject.autoservice.data.model.Request
+import com.ktproject.autoservice.data.model.UpdateRequestStatusRequest
 
 class RequestApi(private val apiClient: ApiClient) {
 
-    suspend fun getUserRequests(): List<GetRequest> {
-        return apiClient.get("/requests")
+    suspend fun createRequest(request: CreateRequestRequest): ApiResponse<String> {
+        return apiClient.safePost("/requests", request)
     }
 
-    suspend fun createRequest(request: Request): GetRequest {
-        return apiClient.post("/requests", request)
+    suspend fun getMyRequests(): ApiResponse<List<Request>> {
+        return apiClient.safeGet("/requests/mine")
     }
 
-    suspend fun getRequestById(id: Int): GetRequest {
-        return apiClient.get("/requests/$id")
+    suspend fun getAllRequests(): ApiResponse<List<Request>> {
+        return apiClient.safeGet("/requests")
     }
 
-    suspend fun updateRequest(id: Int, request: Request): GetRequest {
-        return apiClient.put("/requests/$id", request)
+    suspend fun updateRequestStatus(id: String, request: UpdateRequestStatusRequest): ApiResponse<Unit> {
+        return apiClient.safePut("/requests/$id/status", request)
     }
 
-    suspend fun deleteRequest(id: Int) {
-        apiClient.delete<Unit>("/requests/$id")
+    suspend fun getRequestById(id: String): ApiResponse<Request> {
+        return apiClient.safeGet("/requests/$id")
+    }
+
+    suspend fun deleteRequest(id: String): ApiResponse<Unit> {
+        return apiClient.safeDelete("/requests/$id")
     }
 }

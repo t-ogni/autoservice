@@ -5,13 +5,6 @@ import com.ktproject.autoservice.data.model.Request
 import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.model.User
 
-
-//interface AuthRepository {
-//    suspend fun register(name: String, email: String, password: String): String
-//    suspend fun login(email: String, password: String): String
-//    suspend fun logout()
-//}
-
 interface UserRepository {
     suspend fun getAllUsers(): List<User>
     suspend fun getUserById(userId: String): User?

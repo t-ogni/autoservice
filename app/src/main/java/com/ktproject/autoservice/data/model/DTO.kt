@@ -11,44 +11,6 @@ data class ApiResponse<T>(
 )
 
 @Serializable
-data class GetNews(
-    val id: Int,
-    val title: String,
-    val content: String,
-    val date: String
-)
-
-@Serializable
-data class GetRequest(
-    val id: Int,
-    val userId: Int,
-    val serviceId: Int,
-    val date: String,
-    val carBrand: String,
-    val customerComment: String,
-    val status: String,
-    val result: String? = null
-)
-
-@Serializable
-data class GetService(
-    val id: Int,
-    val name: String,
-    val price: Double,
-    val description: String
-)
-
-@Serializable
-data class GetUser(
-    val id: Int,
-    val name: String,
-    val email: String,
-    val passwordHash: String,
-    val phone: String,
-    val role: String
-)
-
-@Serializable
 data class RegisterRequest(
     val name: String,
     val email: String,
@@ -62,14 +24,53 @@ data class LoginRequest(
 )
 
 @Serializable
-data class UserResponse(
-    val id: Int,
+data class TokenResponse(
+    val token: String
+)
+@Serializable
+data class AddUserRequest(
     val name: String,
     val email: String,
     val role: String
 )
 
 @Serializable
-data class TokenResponse(
-    val token: String
+data class UpdateUserRequest(
+    val name: String? = null,
+    val email: String? = null,
+    val role: String? = null
+)
+
+@Serializable
+data class AddServiceRequest(
+    val title: String,
+    val description: String,
+    val price: String
+)
+@Serializable
+data class CreateRequestRequest(
+    val serviceId: String,
+    val description: String,
+    val date: String,  // yyyy-MM-dd
+    val time: String   // HH:mm
+)
+
+@Serializable
+data class UpdateRequestStatusRequest(
+    val status: String,
+    val result: String? = null
+)
+
+@Serializable
+data class AddNewsRequest(
+    val title: String,
+    val content: String,
+    val date: String
+)
+
+@Serializable
+data class UpdateNewsRequest(
+    val title: String,
+    val content: String,
+    val date: String
 )

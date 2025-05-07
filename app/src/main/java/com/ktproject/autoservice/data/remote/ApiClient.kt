@@ -1,5 +1,6 @@
 package com.ktproject.autoservice.data.remote
 
+import com.ktproject.autoservice.data.model.ApiResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -75,6 +76,42 @@ class ApiClient(
     }
 
 }
+suspend inline fun <reified T : Any> ApiClient.safeGet(path: String): ApiResponse<T> {
+    return try {
+        val response = this.get<T>(path)
+        ApiResponse(success = true, data = response)
+    } catch (e: Exception) {
+        ApiResponse(success = false, error = e.localizedMessage)
+    }
+}
+
+suspend inline fun <reified T : Any> ApiClient.safePost(path: String, body: Any? = null): ApiResponse<T> {
+    return try {
+        val response = this.post<T>(path, body)
+        ApiResponse(success = true, data = response)
+    } catch (e: Exception) {
+        ApiResponse(success = false, error = e.localizedMessage)
+    }
+}
+
+suspend inline fun <reified T : Any> ApiClient.safePut(path: String, body: Any? = null): ApiResponse<T> {
+    return try {
+        val response = this.put<T>(path, body)
+        ApiResponse(success = true, data = response)
+    } catch (e: Exception) {
+        ApiResponse(success = false, error = e.localizedMessage)
+    }
+}
+
+    suspend inline fun <reified T : Any> ApiClient.safeDelete(path: String): ApiResponse<T> {
+    return try {
+        val response = this.delete<T>(path)
+        ApiResponse(success = true, data = response)
+    } catch (e: Exception) {
+        ApiResponse(success = false, error = e.localizedMessage)
+    }
+}
+
 
 suspend inline fun <reified T : Any> ApiClient.get(path: String): T {
     return this.get(path, typeInfo<T>())

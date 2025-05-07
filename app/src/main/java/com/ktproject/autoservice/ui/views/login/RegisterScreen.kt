@@ -103,7 +103,7 @@ fun RegisterScreen(
                         },
                         modifier = Modifier
                             .padding(vertical = 8.dp)
-                            .align(androidx.compose.ui.Alignment.CenterHorizontally)
+                            .align(Alignment.CenterHorizontally)
                     ) {
                         Text("Создать аккаунт")
                     }
