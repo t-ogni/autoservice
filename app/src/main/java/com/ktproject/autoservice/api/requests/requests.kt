@@ -1,14 +1,8 @@
-package com.ktproject.autoservice.data.model
+package com.ktproject.autoservice.api.requests
 
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class ApiResponse<T>(
-    val success: Boolean,
-    val data: T? = null,
-    val error: String? = null
-)
 
 @Serializable
 data class RegisterRequest(
@@ -23,10 +17,6 @@ data class LoginRequest(
     val password: String
 )
 
-@Serializable
-data class TokenResponse(
-    val token: String
-)
 @Serializable
 data class AddUserRequest(
     val name: String,
@@ -47,6 +37,7 @@ data class AddServiceRequest(
     val description: String,
     val price: String
 )
+
 @Serializable
 data class CreateRequestRequest(
     val serviceId: String,
