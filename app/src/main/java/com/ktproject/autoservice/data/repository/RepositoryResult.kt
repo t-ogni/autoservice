@@ -1,7 +1,7 @@
 package com.ktproject.autoservice.data.repository
 
-sealed class Result<out T> {
-    data class Success<out T>(val data: T) : Result<T>()
-    data class Error(val message: String) : Result<Nothing>()
-    data object NetworkError : Result<Nothing>()
+sealed class RepositoryResult<out T> {
+    data class Success<out T>(val data: T) : RepositoryResult<T>()
+    data class Error(val message: String) : RepositoryResult<Nothing>()
+    data class NetworkError(val message: String = "Ошибка интернет-соединения") : RepositoryResult<Nothing>()
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.model.User
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.RequestRepository
 import com.ktproject.autoservice.data.repository.ServiceRepository
 import com.ktproject.autoservice.data.repository.fake.FakeServiceRepository
@@ -32,7 +33,11 @@ class ServicesViewModel (
     fun loadServices() {
         viewModelScope.launch {
             if (_services.value.isEmpty()) {
-                _services.value = serviceRepository.getAllServices()
+                when (val result = serviceRepository.getAllServices()) {
+                    is RepositoryResult.Success -> _services.value = result.data
+                    is RepositoryResult.Error -> {} // Можно добавить обработку ошибки
+                    is RepositoryResult.NetworkError -> {} // Можно добавить обработку ошибки сети
+                }
             }
         }
     }
@@ -40,15 +45,10 @@ class ServicesViewModel (
     fun loadServiceById(serviceId: String) {
         viewModelScope.launch {
             _serviceState.value = UIState.Loading
-            try {
-                val service = serviceRepository.getServiceById(serviceId)
-                if (service != null) {
-                    _serviceState.value = UIState.Success(service)
-                } else {
-                    _serviceState.value = UIState.Error("Сервис не найден")
-                }
-            } catch (e: Exception) {
-                _serviceState.value = UIState.Error(e.message ?: "Неизвестная ошибка")
+            when (val result = serviceRepository.getServiceById(serviceId)) {
+                is RepositoryResult.Success -> _serviceState.value = UIState.Success(result.data)
+                is RepositoryResult.Error -> _serviceState.value = UIState.Error(result.message)
+                is RepositoryResult.NetworkError -> _serviceState.value = UIState.Error(result.message)
             }
         }
     }

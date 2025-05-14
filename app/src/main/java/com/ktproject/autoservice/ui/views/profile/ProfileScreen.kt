@@ -18,9 +18,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +37,8 @@ import androidx.navigation.NavHostController
 import com.ktproject.autoservice.ui.components.UIState
 import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 import com.ktproject.autoservice.ui.viewmodel.ProfileViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +52,17 @@ fun ProfileScreen(
 ) {
     val userState by viewModel.userState.collectAsState()
     val logoutState by viewModel.logoutState.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    fun handleRefresh() {
+        isRefreshing = true
+        coroutineScope.launch {
+            viewModel.loadCurrentUser()
+            delay(300)
+            isRefreshing = false
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text("Профиль") })
@@ -52,39 +70,45 @@ fun ProfileScreen(
         bottomBar = {
             BottomNavigationBar(navController = navController)
         }
-    ) { innerPadding ->
-        Surface (modifier = Modifier.padding(innerPadding)) {
-            when (userState) {
-                is UIState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { handleRefresh() },
+            modifier = Modifier.padding(padding)
+        ) {
+            Surface {
+                when (userState) {
+                    is UIState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
 
-                is UIState.Success -> {
-                    val user = (userState as UIState.Success).data
-                    ProfileContent(
-                        name = user.name,
-                        email = user.email,
-                        role = user.role,
-                        onEditProfileClick = onEditProfileClick,
-                        onMyRequestsClick = onMyRequestsClick,
-                        onLogoutClick = { viewModel.logout() }
-                    )
-                }
-
-                is UIState.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = (userState as UIState.Error).message,
-                            color = MaterialTheme.colorScheme.error
+                    is UIState.Success -> {
+                        val user = (userState as UIState.Success).data
+                        ProfileContent(
+                            name = user.name,
+                            email = user.email,
+                            role = user.role,
+                            onEditProfileClick = onEditProfileClick,
+                            onMyRequestsClick = onMyRequestsClick,
+                            onLogoutClick = { viewModel.logout() }
                         )
+                    }
+
+                    is UIState.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = (userState as UIState.Error).message,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }

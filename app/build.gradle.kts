@@ -79,7 +79,7 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    var ktor_version = "3.1.2"
+    val ktor_version = "3.1.2"
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")

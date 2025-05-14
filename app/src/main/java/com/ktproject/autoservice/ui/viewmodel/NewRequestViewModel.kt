@@ -13,11 +13,13 @@ import kotlinx.coroutines.launch
 
 data class NewRequestData(
     val carModel: String = "",
+    val carBrand: String = "",
     val comment: String = "",
     val selectedServiceId: String = "",
     val selectedDate: String? = null,
     val selectedTime: String? = null
-)
+) {
+}
 
 class NewRequestViewModel(
     private val requestRepository: RequestRepository,
@@ -41,26 +43,33 @@ class NewRequestViewModel(
     fun loadServices(preselectedServiceId: String? = null) {
         viewModelScope.launch {
             _servicesState.value = UIState.Loading
-            try {
-                val loaded = serviceRepository.getAllServices()
-                preselectedServiceId?.let {
-                    updateData { it.copy(selectedServiceId = preselectedServiceId) }
+            when (val result = serviceRepository.getAllServices()) {
+                is RepositoryResult.Success -> {
+                    preselectedServiceId?.let {
+                        updateData { it.copy(selectedServiceId = preselectedServiceId) }
+                    }
+                    _servicesState.value = UIState.Success(result.data)
                 }
-                _servicesState.value = UIState.Success(loaded)
-            } catch (e: Exception) {
-                _servicesState.value = UIState.Error("Ошибка загрузки: ${e.message}")
+                is RepositoryResult.Error -> {
+                    _servicesState.value = UIState.Error("Ошибка загрузки: ${result.message}")
+                }
+                is RepositoryResult.NetworkError -> {
+                    _servicesState.value = UIState.Error("Ошибка соединения: ${result.message}")
+                }
             }
         }
     }
 
     fun loadBusyDates() {
         viewModelScope.launch {
-            try {
-                val allRequests = requestRepository.getAllRequests()
-                val busy = allRequests.groupBy { it.date }.filterValues { it.size >= 4 }.keys.toList()
-                _busyDates.value = busy
-            } catch (e: Exception) {
-                _busyDates.value = emptyList()
+            when (val result = requestRepository.getAllRequests()) {
+                is RepositoryResult.Success -> {
+                    val busy = result.data.groupBy { it.date }.filterValues { it.size >= 4 }.keys.toList()
+                    _busyDates.value = busy
+                }
+                is RepositoryResult.Error, is RepositoryResult.NetworkError -> {
+                    _busyDates.value = emptyList()
+                }
             }
         }
     }
@@ -72,8 +81,8 @@ class NewRequestViewModel(
         Log.d("NEW REQUEST", "createRequest $updated")
     }
 
-    fun updateCarInfo(carModel: String, comment: String) =
-        updateData { it.copy(carModel = carModel, comment = comment) }
+    fun updateCarInfo(carModel: String, comment: String, carBrand: String) =
+        updateData { it.copy(carModel = carModel, comment = comment, carBrand = carBrand) }
 
     fun updateSelectedService(serviceId: String) =
         updateData { it.copy(selectedServiceId = serviceId) }
@@ -92,13 +101,25 @@ class NewRequestViewModel(
     fun createRequest() {
         viewModelScope.launch {
             val current = _requestData.value
-            val requestId = requestRepository.createRequest(
+            when (val result = requestRepository.createRequest(
                 serviceId = current.selectedServiceId,
                 description = current.comment,
                 date = current.selectedDate ?: "0001-01-01",
-                time = current.selectedTime ?: "00:00"
-            )
-            Log.d("NEW REQUEST", "createRequest ID $requestId")
+                time = current.selectedTime ?: "00:00",
+                carBrand = current.carBrand, // Добавляем марку, если есть
+                carModel = current.carModel // Добавляем модель автомобиля
+            )) {
+                is RepositoryResult.Success -> {
+                    Log.d("NEW REQUEST", "createRequest ID ${result.data}")
+                    clearDraft() // Очищаем черновик после успешного создания
+                }
+                is RepositoryResult.Error -> {
+                    Log.e("NEW REQUEST", "Error creating request: ${result.message}")
+                }
+                is RepositoryResult.NetworkError -> {
+                    Log.e("NEW REQUEST", "Network error: ${result.message}")
+                }
+            }
         }
     }
 }

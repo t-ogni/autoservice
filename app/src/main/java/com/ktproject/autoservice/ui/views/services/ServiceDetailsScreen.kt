@@ -1,11 +1,13 @@
 package com.ktproject.autoservice.ui.views.services
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +16,8 @@ import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.ui.components.ErrorSnackbar
 import com.ktproject.autoservice.ui.components.UIState
 import com.ktproject.autoservice.ui.viewmodel.ServicesViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +35,16 @@ fun ServiceDetailsScreen(
         viewModel.loadServiceById(serviceId)
     }
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    fun handleRefresh() {
+        isRefreshing = true
+        coroutineScope.launch {
+            viewModel.loadServiceById(serviceId)
+            delay(300)
+            isRefreshing = false
+        }
+    }
 
     when (state) {
         is UIState.Loading -> {
@@ -120,7 +134,19 @@ fun ServiceDetailsScreen(
             }
         }
         is UIState.Error -> {
-            ErrorSnackbar(message =  (state as UIState.Error).message)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { handleRefresh() }
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Text((state as UIState.Error).message)
+                    }
+                }
+            }
         }
     }
 

@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.ui.components.ErrorSnackbar
 import com.ktproject.autoservice.ui.components.UIState
 import com.ktproject.autoservice.ui.viewmodel.AdminNewsViewModel
@@ -45,7 +45,7 @@ fun AdminEditNewsScreen(
 
     when (newsState) {
         is UIState.Loading -> {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize(), ) {
                 CircularProgressIndicator()
             }
         }

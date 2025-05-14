@@ -1,6 +1,7 @@
 package com.ktproject.autoservice.api.requests
 
 
+import com.ktproject.autoservice.component.carList.CarModel
 import kotlinx.serialization.Serializable
 
 
@@ -15,6 +16,11 @@ data class RegisterRequest(
 data class LoginRequest(
     val email: String,
     val password: String
+)
+
+@Serializable
+data class LogoutRequest(
+    val token: String
 )
 
 @Serializable
@@ -43,7 +49,9 @@ data class CreateRequestRequest(
     val serviceId: String,
     val description: String,
     val date: String,  // yyyy-MM-dd
-    val time: String   // HH:mm
+    val time: String,   // HH:mm
+    val carModel: String,
+    val carBrand: String
 )
 
 @Serializable

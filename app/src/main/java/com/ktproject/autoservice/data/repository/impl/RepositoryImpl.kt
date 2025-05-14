@@ -1,16 +1,15 @@
 package com.ktproject.autoservice.data.repository.impl
 
+import com.ktproject.autoservice.api.requests.AddNewsRequest
+import com.ktproject.autoservice.api.requests.CreateRequestRequest
+import com.ktproject.autoservice.api.requests.LogoutRequest
+import com.ktproject.autoservice.api.requests.UpdateNewsRequest
 import com.ktproject.autoservice.api.responses.ApiResponse
-import io.ktor.client.statement.bodyAsText
+import com.ktproject.autoservice.component.carList.CarModel
 import com.ktproject.autoservice.data.model.*
 import com.ktproject.autoservice.data.remote.*
 import com.ktproject.autoservice.data.repository.*
 import com.ktproject.autoservice.data.repository.RepositoryResult.*
-import io.ktor.client.call.body
-import io.ktor.client.plugins.*
-import io.ktor.http.*
-import io.ktor.util.reflect.TypeInfo
-import kotlinx.serialization.json.Json
 
 class UserRepositoryImpl(private val apiClient: ApiClient) : UserRepository {
 
@@ -35,12 +34,12 @@ class UserRepositoryImpl(private val apiClient: ApiClient) : UserRepository {
     }
 
     override suspend fun getCurrentUser(): RepositoryResult<User> = safeCall {
-        apiClient.get("/users/me", typeInfo<User>())
+        apiClient.get("/users/me")
     }
 
-    override suspend fun isAuthenticated(): RepositoryResult<Boolean> = safeCall {
+    override suspend fun isAuthenticated(): RepositoryResult<Boolean>  {
         val token = apiClient.getToken()
-        Success(!token.isNullOrEmpty())
+        return Success(!token.isNullOrEmpty())
     }
 
     override suspend fun login(email: String, password: String): RepositoryResult<Unit> = safeCall {
@@ -52,18 +51,18 @@ class UserRepositoryImpl(private val apiClient: ApiClient) : UserRepository {
     }
 
     override suspend fun logout(): RepositoryResult<Unit> = safeCall {
-        apiClient.post("/logout")
+        apiClient.post("/logout", LogoutRequest(apiClient.getToken() ?: ""))
     }
 }
 
 class ServiceRepositoryImpl(private val apiClient: ApiClient) : ServiceRepository {
 
     override suspend fun getAllServices(): RepositoryResult<List<Service>> = safeCall {
-        apiClient.get("/services", typeInfo<List<Service>>())
+        apiClient.get("/services")
     }
 
     override suspend fun getServiceById(serviceId: String): RepositoryResult<Service> = safeCall {
-        apiClient.get("/services/$serviceId", typeInfo<Service>())
+        apiClient.get("/services/$serviceId")
     }
 
     override suspend fun addService(name: String, description: String, price: String): RepositoryResult<Unit> = safeCall {
@@ -76,21 +75,25 @@ class ServiceRepositoryImpl(private val apiClient: ApiClient) : ServiceRepositor
 }
 
 class RequestRepositoryImpl(private val apiClient: ApiClient) : RequestRepository {
-
-    override suspend fun createRequest(serviceId: String, description: String): RepositoryResult<String> = safeCall {
-        apiClient.post("/requests", mapOf("serviceId" to serviceId, "description" to description))
+    override suspend fun createRequest(
+        serviceId: String,
+        description: String,
+        carBrand: String,
+        carModel: String
+    ): RepositoryResult<String> = safeCall {
+        apiClient.post("/requests", CreateRequestRequest(serviceId, description, "2000-01-01", "10:00", carModel, carBrand))
     }
 
-    override suspend fun createRequest(serviceId: String, description: String, date: String, time: String): RepositoryResult<String> = safeCall {
-        apiClient.post("/requests", mapOf("serviceId" to serviceId, "description" to description, "date" to date, "time" to time))
+    override suspend fun createRequest(serviceId: String, description: String, date: String, time: String, carBrand: String, carModel: String): RepositoryResult<String> = safeCall {
+        apiClient.post("/requests", CreateRequestRequest(serviceId, description, date, time, carModel, carBrand))
     }
 
     override suspend fun getMyRequests(): RepositoryResult<List<Request>> = safeCall {
-        apiClient.get("/my_requests", typeInfo<List<Request>>())
+        apiClient.get("/my_requests")
     }
 
     override suspend fun getAllRequests(): RepositoryResult<List<Request>> = safeCall {
-        apiClient.get("/requests", typeInfo<List<Request>>())
+        apiClient.get("/requests")
     }
 
     override suspend fun updateRequestStatus(requestId: String, status: String, result: String?): RepositoryResult<Unit> = safeCall {
@@ -101,19 +104,19 @@ class RequestRepositoryImpl(private val apiClient: ApiClient) : RequestRepositor
 class NewsRepositoryImpl(private val apiClient: ApiClient) : NewsRepository {
 
     override suspend fun getNews(): RepositoryResult<List<News>> = safeCall {
-        apiClient.get("/news", typeInfo<List<News>>())
+        apiClient.get("/news")
     }
 
     override suspend fun getNewsById(newsId: String): RepositoryResult<News> = safeCall {
-        apiClient.get("/news/$newsId", typeInfo<News>())
+        apiClient.get("/news/$newsId")
     }
 
     override suspend fun addNews(title: String, content: String, date: String): RepositoryResult<Unit> = safeCall {
-        apiClient.post("/news", mapOf("title" to title, "content" to content, "date" to date))
+        apiClient.post("/news", AddNewsRequest(title, content, date))
     }
 
     override suspend fun updateNews(newsId: String, title: String, content: String, date: String): RepositoryResult<Unit> = safeCall {
-        apiClient.put("/news/$newsId", typeInfo = mapOf("title" to title, "content" to content, "date" to date))
+        apiClient.put("/news/$newsId", UpdateNewsRequest(title, content, date))
     }
 
     override suspend fun deleteNews(newsId: String): RepositoryResult<Unit> = safeCall {
@@ -121,7 +124,7 @@ class NewsRepositoryImpl(private val apiClient: ApiClient) : NewsRepository {
     }
 }
 
-suspend inline fun <reified T : Any> safeCall(block: () -> ApiResponse<T>): RepositoryResult<T> {
+inline fun <reified T : Any> safeCall(block: () -> ApiResponse<T>): RepositoryResult<T> {
     return try {
         val response = block()
         if (response.success) {
@@ -134,7 +137,7 @@ suspend inline fun <reified T : Any> safeCall(block: () -> ApiResponse<T>): Repo
             RepositoryResult.Error(response.error ?: "Неизвестная ошибка")
         }
     } catch (e: Exception) {
-        RepositoryResult.NetworkError
+        RepositoryResult.NetworkError()
     }
 }
 

@@ -112,10 +112,11 @@ fun CarInfoCommentScreen(
             TextField(
                 value = requestData.comment,
                 onValueChange = {
-                    // Обновляем модель, включая выбранную машину
+                    // Обновляем модель, включая выбранную машину и марку
                     viewModel.updateCarInfo(
-                        carSearchViewModel.query,
-                        it
+                        carModel = carSearchViewModel.query,
+                        comment = it,
+                        carBrand = carSearchViewModel.makeQuery
                     )
                 },
                 label = { Text("Комментарий") },

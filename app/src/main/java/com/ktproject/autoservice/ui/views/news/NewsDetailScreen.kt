@@ -4,7 +4,9 @@ package com.ktproject.autoservice.ui.views.news
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +16,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ktproject.autoservice.ui.components.UIState
 import com.ktproject.autoservice.ui.viewmodel.NewsDetailViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,9 +28,21 @@ fun NewsDetailScreen(
 ) {
     val state by viewModel.newsState.collectAsState()
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    fun handleRefresh() {
+        isRefreshing = true
+        coroutineScope.launch {
+            viewModel.loadNews(newsId)
+            delay(300)
+            isRefreshing = false
+        }
+    }
+
     LaunchedEffect(newsId) {
         viewModel.loadNews(newsId)
     }
+
     when (state) {
         is UIState.Loading ->  {
             Box(
@@ -68,7 +84,23 @@ fun NewsDetailScreen(
             }
         }
         is UIState.Error -> {
-            Text("Ошибка: ${(state as UIState.Error).message}")
+            Scaffold (modifier = Modifier.fillMaxSize().systemBarsPadding()){ padding ->
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { handleRefresh() },
+                    modifier = Modifier.padding(padding)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            Text((state as UIState.Error).message)
+                        }
+                    }
+                }
+
+            }
         }
     }
 }

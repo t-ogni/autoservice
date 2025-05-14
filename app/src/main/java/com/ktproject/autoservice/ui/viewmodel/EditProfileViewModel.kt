@@ -3,6 +3,7 @@ package com.ktproject.autoservice.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.User
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,30 +23,24 @@ class EditProfileViewModel(
 
     private fun loadUser() {
         viewModelScope.launch {
-            try {
-                _userState.value = UIState.Loading
-                val user = userRepository.getCurrentUser()
-                if (user != null) {
-                    _userState.value = UIState.Success(user)
-                } else {
-                    _userState.value = UIState.Error("User not found")
-                }
-            } catch (e: Exception) {
-                _userState.value = UIState.Error(e.message ?: "Unknown error")
+            _userState.value = UIState.Loading
+            when (val result = userRepository.getCurrentUser()) {
+                is RepositoryResult.Success -> _userState.value = UIState.Success(result.data)
+                is RepositoryResult.Error -> _userState.value = UIState.Error(result.message)
+                is RepositoryResult.NetworkError -> _userState.value = UIState.Error(result.message)
             }
         }
     }
 
     fun updateProfile(name: String, email: String) {
         viewModelScope.launch {
-            try {
-                val user = (userState.value as? UIState.Success)?.data
-                user?.let {
-                    userRepository.updateUser(it.id, name, email, user.role)
-                    loadUser() // Перезагрузить обновленные данные
+            val user = (userState.value as? UIState.Success)?.data
+            user?.let {
+                when (val result = userRepository.updateUser(it.id, name, email, user.role)) {
+                    is RepositoryResult.Success -> loadUser() // Перезагрузить обновленные данные
+                    is RepositoryResult.Error -> _userState.value = UIState.Error(result.message)
+                    is RepositoryResult.NetworkError -> _userState.value = UIState.Error(result.message)
                 }
-            } catch (e: Exception) {
-                _userState.value = UIState.Error(e.message ?: "Update failed")
             }
         }
     }

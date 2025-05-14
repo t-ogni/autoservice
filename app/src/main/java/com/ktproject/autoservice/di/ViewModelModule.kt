@@ -2,7 +2,6 @@ package com.ktproject.autoservice.di
 
 import com.ktproject.autoservice.data.local.TokenDataStore
 import com.ktproject.autoservice.data.remote.ApiClient
-import com.ktproject.autoservice.data.remote.UserApi
 import com.ktproject.autoservice.component.carList.carListClient
 import com.ktproject.autoservice.data.repository.NewsRepository
 import com.ktproject.autoservice.data.repository.RequestRepository
@@ -42,9 +41,6 @@ val viewModelModule = module {
     // ApiClient
     single { ApiClient(baseUrl = "https://your-server-url.com") }
 
-    // APIs
-    single { UserApi(get()) }
-
     // Car Brands Online Api
     single { carListClient }
     single { CarRepository(get()) }
@@ -78,7 +74,7 @@ val viewModelModule = module {
     viewModel { AdminUsersViewModel(get()) }
 
     viewModel { MyRequestsViewModel(get()) }
-    viewModel { AdminRequestsViewModel(get()) }
+    viewModel { AdminRequestsViewModel(get(), get()) }
     viewModel { UserRequestsViewModel(get()) }
 
     viewModel { NewRequestViewModel(get(), get(), get(), get()) }

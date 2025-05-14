@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,10 +45,11 @@ fun HomeScreen(
     val newsUiState by viewModel.newsUiState.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
 
+
+
     var backPressedOnce by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? Activity
-    val coroutineScope = rememberCoroutineScope()
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val shouldReload = savedStateHandle?.get<Boolean>("newRequestCreated") ?: false
@@ -58,6 +62,16 @@ fun HomeScreen(
         viewModel.loadHomeData()
     }
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    fun handleRefresh() {
+        isRefreshing = true
+        coroutineScope.launch {
+            viewModel.loadHomeData()
+            delay(300)
+            isRefreshing = false
+        }
+    }
 
     when (userRole) {
         is UIState.Loading -> {
@@ -69,12 +83,14 @@ fun HomeScreen(
                     BottomNavigationBar(navController = navController)
                 }
             ) { padding ->
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize().padding(padding)
-                ) {
-                    CircularProgressIndicator()
-                }
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize().padding(padding)
+                    ) {
+                        CircularProgressIndicator()
+                    }
+
             }
         }
 
@@ -104,150 +120,158 @@ fun HomeScreen(
                     BottomNavigationBar(navController = navController)
                 }
             ) { padding ->
-                Column(
+                PullToRefreshBox(
                     modifier = Modifier
                         .padding(padding)
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    isRefreshing = isRefreshing,
+                    onRefresh = { handleRefresh() }
                 ) {
-                    when (requestsUiState) {
-                        is UIState.Loading -> {
-                            Box(
-                                Modifier.fillMaxWidth().height(100.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-
-                        is UIState.Success -> {
-                            val requests = (requestsUiState as UIState.Success<List<Request>>).data
-                            if (requests.isEmpty()) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp)
-                                ) {
-                                    Card(
-                                        onClick = onCreateRequestClick,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(horizontal = 16.dp)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        item {
+                            when (requestsUiState) {
+                                is UIState.Loading -> {
+                                    Box(
+                                        Modifier.fillMaxWidth().height(100.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+
+                                is UIState.Success -> {
+                                    val requests =
+                                        (requestsUiState as UIState.Success<List<Request>>).data
+                                    if (requests.isEmpty()) {
                                         Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier.fillMaxSize()
-                                        ) {
-                                            Text(
-                                                text = "Создать заявку (+)",
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
-                                LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp)
-                                ) {
-                                    items(requests) { request ->
-                                        Card(
-                                            onClick = { onRequestClick(request.id) },
                                             modifier = Modifier
-                                                .width(120.dp)
-                                                .fillMaxHeight()
+                                                .fillMaxWidth()
+                                                .height(100.dp)
                                         ) {
-                                            Box(
-                                                contentAlignment = Alignment.Center,
-                                                modifier = Modifier.fillMaxSize()
+                                            Card(
+                                                onClick = onCreateRequestClick,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .padding(horizontal = 16.dp)
                                             ) {
-                                                Text(
-                                                    text = request.description,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    modifier = Modifier.padding(8.dp)
-                                                )
+                                                Box(
+                                                    contentAlignment = Alignment.Center,
+                                                    modifier = Modifier.fillMaxSize()
+                                                ) {
+                                                    Text(
+                                                        text = "Создать заявку (+)",
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        LazyRow(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(100.dp)
+                                        ) {
+                                            items(requests) { request ->
+                                                Card(
+                                                    onClick = { onRequestClick(request.id) },
+                                                    modifier = Modifier
+                                                        .width(120.dp)
+                                                        .fillMaxHeight()
+                                                ) {
+                                                    Box(
+                                                        contentAlignment = Alignment.Center,
+                                                        modifier = Modifier.fillMaxSize()
+                                                    ) {
+                                                        Text(
+                                                            text = request.description,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            modifier = Modifier.padding(8.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            item {
+                                                Card(
+                                                    onClick = onCreateRequestClick,
+                                                    modifier = Modifier
+                                                        .width(120.dp)
+                                                        .fillMaxHeight()
+                                                ) {
+                                                    Box(
+                                                        contentAlignment = Alignment.Center,
+                                                        modifier = Modifier.fillMaxSize()
+                                                    ) {
+                                                        Text(
+                                                            text = "+",
+                                                            style = MaterialTheme.typography.headlineMedium
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                    item {
-                                        Card(
-                                            onClick = onCreateRequestClick,
-                                            modifier = Modifier
-                                                .width(120.dp)
-                                                .fillMaxHeight()
-                                        ) {
-                                            Box(
-                                                contentAlignment = Alignment.Center,
-                                                modifier = Modifier.fillMaxSize()
-                                            ) {
-                                                Text(
-                                                    text = "+",
-                                                    style = MaterialTheme.typography.headlineMedium
-                                                )
-                                            }
-                                        }
+
+                                }
+
+                                is UIState.Error -> {
+                                    Box(
+                                        Modifier.fillMaxWidth().height(100.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Ошибка загрузки заявок")
                                     }
                                 }
                             }
-
                         }
-
-                        is UIState.Error -> {
-                            Box(
-                                Modifier.fillMaxWidth().height(100.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Ошибка загрузки заявок")
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Box(modifier = Modifier.padding(16.dp)) {
-                        Column {
+                        item {
                             Text(
                                 text = "Новости и акции",
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
+                        }
 
-                            when (newsUiState) {
+                        when (newsUiState) {
                             is UIState.Loading -> {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator()
+                                item {
+                                    Box(
+                                        Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
                                 }
                             }
 
                             is UIState.Success -> {
                                 val newsList = (newsUiState as UIState.Success<List<News>>).data
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(newsList) { news ->
-                                        Card(
-                                            onClick = { onNewsClick(news.id) },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Box(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-                                                Row {
+                                items(newsList) { news ->
+                                    Card(
+                                        onClick = { onNewsClick(news.id) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Box(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                                            Row {
 
+                                                Text(
+                                                    text = news.title,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Column(
+                                                    modifier = Modifier.widthIn(50.dp, 100.dp),
+                                                    horizontalAlignment = Alignment.End
+                                                ) {
                                                     Text(
-                                                        text = news.title,
-                                                        style = MaterialTheme.typography.bodyLarge,
-                                                        modifier = Modifier.weight(1f)
+                                                        text = news.date,
+                                                        style = MaterialTheme.typography.bodySmall
                                                     )
-                                                    Column(
-                                                        modifier = Modifier.widthIn(50.dp, 100.dp),
-                                                        horizontalAlignment = Alignment.End
-                                                    ) {
-                                                        Text(
-                                                            text = news.date,
-                                                            style = MaterialTheme.typography.bodySmall
-                                                        )
-                                                    }
                                                 }
                                             }
                                         }
@@ -256,24 +280,34 @@ fun HomeScreen(
                             }
 
                             is UIState.Error -> {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Ошибка загрузки новостей")
+                                item {
+                                    Box(
+                                        Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Ошибка загрузки новостей")
+                                    }
                                 }
                             }
-                        }
                         }
                     }
                 }
             }
         }
 
-
         is UIState.Error -> {
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { handleRefresh() }
             ) {
-                Text("Ошибка загрузки пользователя")
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Text("Ошибка загрузки пользователя")
+                    }
+                }
             }
         }
     }

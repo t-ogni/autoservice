@@ -32,7 +32,7 @@ import com.ktproject.autoservice.ui.views.services.ServiceDetailsScreen
 import com.ktproject.autoservice.ui.views.services.ServicesScreen
 
 @Composable
-fun AppNavGraph(navController: NavHostController, startDestination: String = "splash_screen") {
+fun AppNavGraph(navController: NavHostController, startDestination: String = "login") {
     NavHost(navController = navController, startDestination = startDestination) {
 
         // Сплеш-скрин с проверкой авторизации

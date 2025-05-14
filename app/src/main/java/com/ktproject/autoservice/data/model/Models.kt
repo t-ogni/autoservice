@@ -18,6 +18,8 @@ data class Request(
     val serviceId: String,
     val userId: String,
     val description: String,
+    val carBrand: String = "",
+    val carModel: String = "",
     val status: String,
     val date: String,       // yyyy-MM-dd
     val time: String,       // HH:mm

@@ -2,9 +2,7 @@ package com.ktproject.autoservice.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktproject.autoservice.data.local.TokenDataStore
-import com.ktproject.autoservice.data.model.LoginRequest
-import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,14 +33,16 @@ class AuthViewModel(
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             when (val result = userRepository.login(email, password)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     _authUiState.value = AuthUiState.Success
                     _navigationEvent.emit(Unit)
                 }
-                is ResultState.Error -> {
+                is RepositoryResult.Error -> {
                     _authUiState.value = AuthUiState.Error(result.message)
                 }
-                ResultState.Loading -> {} // обычно не приходит сюда
+                is RepositoryResult.NetworkError -> {
+                    _authUiState.value = AuthUiState.Error(result.message)
+                }
             }
         }
     }
@@ -51,14 +51,16 @@ class AuthViewModel(
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             when (val result = userRepository.register(name, email, password)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     _authUiState.value = AuthUiState.Success
                     _navigationEvent.emit(Unit)
                 }
-                is ResultState.Error -> {
+                is RepositoryResult.Error -> {
                     _authUiState.value = AuthUiState.Error(result.message)
                 }
-                ResultState.Loading -> {} // обычно не приходит сюда
+                is RepositoryResult.NetworkError -> {
+                    _authUiState.value = AuthUiState.Error(result.message)
+                }
             }
         }
     }

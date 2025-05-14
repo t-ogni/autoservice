@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.News
 import com.ktproject.autoservice.data.repository.NewsRepository
-import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,9 +25,9 @@ class AdminNewsViewModel(
         viewModelScope.launch {
             _newsListState.value = UIState.Loading
             when (val result = newsRepository.getNews()) {
-                is ResultState.Success -> _newsListState.value = UIState.Success(result.data.sortedByDescending { it.date })
-                is ResultState.Error -> _newsListState.value = UIState.Error(result.message)
-                ResultState.Loading -> {} // игнорируем, т.к. уже загрузка
+                is RepositoryResult.Success -> _newsListState.value = UIState.Success(result.data.sortedByDescending { it.date })
+                is RepositoryResult.Error -> _newsListState.value = UIState.Error(result.message)
+                is RepositoryResult.NetworkError -> _newsListState.value = UIState.Error(result.message)
             }
         }
     }
@@ -36,9 +36,9 @@ class AdminNewsViewModel(
         viewModelScope.launch {
             _selectedNewsState.value = UIState.Loading
             when (val result = newsRepository.getNewsById(newsId)) {
-                is ResultState.Success -> _selectedNewsState.value = UIState.Success(result.data)
-                is ResultState.Error -> _selectedNewsState.value = UIState.Error(result.message)
-                ResultState.Loading -> {}
+                is RepositoryResult.Success -> _selectedNewsState.value = UIState.Success(result.data)
+                is RepositoryResult.Error -> _selectedNewsState.value = UIState.Error(result.message)
+                is RepositoryResult.NetworkError -> _newsListState.value = UIState.Error(result.message)
             }
         }
     }
@@ -52,12 +52,12 @@ class AdminNewsViewModel(
     ) {
         viewModelScope.launch {
             when (val result = newsRepository.addNews(title, content, date)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     loadNews()
                     onSuccess()
                 }
-                is ResultState.Error -> onError(result.message)
-                ResultState.Loading -> {}
+                is RepositoryResult.Error -> onError(result.message)
+                is RepositoryResult.NetworkError -> _newsListState.value = UIState.Error(result.message)
             }
         }
     }
@@ -72,12 +72,12 @@ class AdminNewsViewModel(
     ) {
         viewModelScope.launch {
             when (val result = newsRepository.updateNews(newsId, title, content, date)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     loadNews()
                     onSuccess()
                 }
-                is ResultState.Error -> onError(result.message)
-                ResultState.Loading -> {}
+                is RepositoryResult.Error -> onError(result.message)
+                is RepositoryResult.NetworkError -> _newsListState.value = UIState.Error(result.message)
             }
         }
     }
@@ -89,12 +89,12 @@ class AdminNewsViewModel(
     ) {
         viewModelScope.launch {
             when (val result = newsRepository.deleteNews(newsId)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     loadNews()
                     onSuccess()
                 }
-                is ResultState.Error -> onError(result.message)
-                ResultState.Loading -> {}
+                is RepositoryResult.Error -> onError(result.message)
+                is RepositoryResult.NetworkError -> _newsListState.value = UIState.Error(result.message)
             }
         }
     }

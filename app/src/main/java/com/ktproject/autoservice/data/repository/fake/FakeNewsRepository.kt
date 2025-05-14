@@ -3,8 +3,9 @@ package com.ktproject.autoservice.data.repository.fake
 import com.ktproject.autoservice.data.model.News
 import com.ktproject.autoservice.data.remote.ApiClient
 import com.ktproject.autoservice.data.repository.NewsRepository
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import kotlinx.coroutines.delay
-import com.ktproject.autoservice.data.repository.ResultState
+import kotlin.random.Random
 
 class FakeNewsRepository(
     private val apiClient: ApiClient
@@ -18,70 +19,79 @@ class FakeNewsRepository(
                 "  <li>Квалифицированный персонал</li>\n" +
                 "</ul>\n", "2025-04-01"),
 
+        News("22", "Новая услуга: Чистка кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
+
+        News("23", "Новая услуга: Чистка кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
+
+        News("25", "Новая услуга: Чистка кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
+
+        News("39", "Новая услуга: фывфывфывфывфыафыафыафыафыафыа кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
+
+        News("29", "Новая услуга: Чистка кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
+
         News("2", "Новая услуга: Чистка кондиционеров", "Поддерживайте чистоту воздуха в салоне.", "2025-04-10"),
         News("3", "Акция на замену масла", "При замене масла – скидка на фильтр!", "2025-04-15"),
         News("4", "Розыгрыш среди клиентов", "Выиграй бесплатную диагностику!", "2025-04-20"),
         News("5", "Праздничные выходные", "Работаем в праздничные дни по графику.", "2025-05-01")
     )
 
-    override suspend fun getNews(): ResultState<List<News>> {
+    private fun shouldFail() = Random.nextFloat() < 0.6f
+
+    override suspend fun getNews(): RepositoryResult<List<News>> {
         delay(300)
-        return try {
-            ResultState.Success(news)
-        } catch (e: Exception) {
-            ResultState.Error("Ошибка загрузки новостей: ${e.message}")
+        return if (shouldFail()) {
+            RepositoryResult.Error("Ошибка загрузки новостей (симуляция сбоя)")
+        } else {
+            RepositoryResult.Success(news)
         }
     }
 
-    override suspend fun getNewsById(newsId: String): ResultState<News> {
+    override suspend fun getNewsById(newsId: String): RepositoryResult<News> {
         delay(200)
-        return try {
+        return if (shouldFail()) {
+            RepositoryResult.Error("Ошибка получения новости (симуляция сбоя)")
+        } else {
             val found = news.firstOrNull { it.id == newsId }
-                ?: return ResultState.Error("Новость не найдена")
-            ResultState.Success(found)
-        } catch (e: Exception) {
-            ResultState.Error("Ошибка получения новости: ${e.message}")
+            if (found != null) RepositoryResult.Success(found)
+            else RepositoryResult.Error("Новость не найдена")
         }
     }
 
-    override suspend fun addNews(title: String, content: String, date: String): ResultState<Unit> {
+    override suspend fun addNews(title: String, content: String, date: String): RepositoryResult<Unit> {
         delay(400)
-        return try {
-            val newId = ((news.maxByOrNull { it.id.toInt() }?.id?.toIntOrNull() ?: (0 + 1))).toString()
+        return if (shouldFail()) {
+            RepositoryResult.Error("Ошибка добавления новости (симуляция сбоя)")
+        } else {
+            val newId = ((news.maxByOrNull { it.id.toInt() }?.id?.toIntOrNull() ?: 0) + 1).toString()
             val newNews = News(newId, title, content, date)
             news.add(newNews)
-            ResultState.Success(Unit)
-        } catch (e: Exception) {
-            ResultState.Error("Ошибка добавления новости: ${e.message}")
+            RepositoryResult.Success(Unit)
         }
     }
 
-    override suspend fun updateNews(newsId: String, title: String, content: String, date: String): ResultState<Unit> {
+    override suspend fun updateNews(newsId: String, title: String, content: String, date: String): RepositoryResult<Unit> {
         delay(400)
-        return try {
+        return if (shouldFail()) {
+            RepositoryResult.Error("Ошибка обновления новости (симуляция сбоя)")
+        } else {
             val index = news.indexOfFirst { it.id == newsId }
             if (index != -1) {
                 news[index] = News(newsId, title, content, date)
-                ResultState.Success(Unit)
+                RepositoryResult.Success(Unit)
             } else {
-                ResultState.Error("Новость для обновления не найдена")
+                RepositoryResult.Error("Новость для обновления не найдена")
             }
-        } catch (e: Exception) {
-            ResultState.Error("Ошибка обновления новости: ${e.message}")
         }
     }
 
-    override suspend fun deleteNews(newsId: String): ResultState<Unit> {
+    override suspend fun deleteNews(newsId: String): RepositoryResult<Unit> {
         delay(300)
-        return try {
+        return if (shouldFail()) {
+            RepositoryResult.Error("Ошибка удаления новости (симуляция сбоя)")
+        } else {
             val deleted = news.removeIf { it.id == newsId }
-            if (deleted) {
-                ResultState.Success(Unit)
-            } else {
-                ResultState.Error("Новость для удаления не найдена")
-            }
-        } catch (e: Exception) {
-            ResultState.Error("Ошибка удаления новости: ${e.message}")
+            if (deleted) RepositoryResult.Success(Unit)
+            else RepositoryResult.Error("Новость для удаления не найдена")
         }
     }
 }

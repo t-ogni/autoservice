@@ -6,7 +6,7 @@ import com.ktproject.autoservice.data.model.News
 import com.ktproject.autoservice.data.model.Request
 import com.ktproject.autoservice.data.repository.NewsRepository
 import com.ktproject.autoservice.data.repository.RequestRepository
-import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,8 +55,13 @@ class HomeViewModel(
     private suspend fun loadUserRole() {
         _userRole.value = UIState.Loading
         try {
-            val role = userRepository.getCurrentUser()?.role ?: "user"
-            _userRole.value = UIState.Success(role)
+            val result = userRepository.getCurrentUser()
+            when (result) {
+                is RepositoryResult.Success -> { _userRole.value = UIState.Success(result.data.role) }
+                is RepositoryResult.Error -> { _userRole.value = UIState.Error(result.message) }
+                is RepositoryResult.NetworkError -> { _userRole.value = UIState.Error(result.message) }
+            }
+
         } catch (e: Exception) {
             _userRole.value = UIState.Error("Ошибка загрузки пользователя: ${e.message}")
         }
@@ -66,8 +71,12 @@ class HomeViewModel(
         viewModelScope.launch {
             _requestsUiState.value = UIState.Loading
             try {
-                val requests = requestRepository.getMyRequests()
-                _requestsUiState.value = UIState.Success(requests)
+                when (val result = requestRepository.getMyRequests()) {
+                    is RepositoryResult.Success -> { _requestsUiState.value = UIState.Success(result.data) }
+                    is RepositoryResult.Error -> { _requestsUiState.value = UIState.Error(result.message) }
+                    is RepositoryResult.NetworkError -> { _requestsUiState.value = UIState.Error(result.message) }
+                }
+
             } catch (e: Exception) {
                 _requestsUiState.value = UIState.Error("Ошибка загрузки заявок: ${e.message}")
             }
@@ -78,13 +87,13 @@ class HomeViewModel(
         viewModelScope.launch {
             _newsUiState.value = UIState.Loading
             when (val result = newsRepository.getNews()) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     _newsUiState.value = UIState.Success(result.data.sortedByDescending { it.date })
                 }
-                is ResultState.Error -> {
+                is RepositoryResult.Error -> {
                     _newsUiState.value = UIState.Error("Ошибка загрузки новостей: ${result.message}")
                 }
-                ResultState.Loading -> {}
+                is RepositoryResult.NetworkError -> {}
             }
         }
     }

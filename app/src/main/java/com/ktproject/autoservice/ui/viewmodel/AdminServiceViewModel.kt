@@ -3,6 +3,7 @@ package com.ktproject.autoservice.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.Service
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.ServiceRepository
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,35 +23,41 @@ class AdminServiceViewModel(
     fun loadAllServices() {
         viewModelScope.launch {
             _servicesState.value = UIState.Loading
-            try {
-                _servicesState.value = UIState.Success(repository.getAllServices())
-            } catch (e: Exception) {
-                _servicesState.value = UIState.Error(e.message ?: "Ошибка при загрузке")
+            when (val result = repository.getAllServices()) {
+                is RepositoryResult.Success -> _servicesState.value = UIState.Success(result.data)
+                is RepositoryResult.Error -> _servicesState.value = UIState.Error(result.message)
+                is RepositoryResult.NetworkError -> _servicesState.value = UIState.Error(result.message)
             }
         }
     }
 
     fun loadServiceById(id: String) {
         viewModelScope.launch {
-            _selectedService.value = repository.getServiceById(id)
+            when (val result = repository.getServiceById(id)) {
+                is RepositoryResult.Success -> _selectedService.value = result.data
+                is RepositoryResult.Error -> {} // Обработка ошибки, если необходимо
+                is RepositoryResult.NetworkError -> {} // Обработка ошибки сети, если необходимо
+            }
         }
     }
 
     fun addService(name: String, description: String, price: String) {
         viewModelScope.launch {
-            try {
-                repository.addService(name, description, price)
-                loadAllServices()
-            } catch (_: Exception) {}
+            when (val result = repository.addService(name, description, price)) {
+                is RepositoryResult.Success -> loadAllServices()
+                is RepositoryResult.Error -> {} // Обработка ошибки, если необходимо
+                is RepositoryResult.NetworkError -> {} // Обработка ошибки сети, если необходимо
+            }
         }
     }
 
     fun deleteService(id: String) {
         viewModelScope.launch {
-            try {
-                repository.deleteService(id)
-                loadAllServices()
-            } catch (_: Exception) {}
+            when (val result = repository.deleteService(id)) {
+                is RepositoryResult.Success -> loadAllServices()
+                is RepositoryResult.Error -> {} // Обработка ошибки, если необходимо
+                is RepositoryResult.NetworkError -> {} // Обработка ошибки сети, если необходимо
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package com.ktproject.autoservice.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.User
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,29 +21,47 @@ class UserViewModel(
 
     fun loadAllUsers() {
         viewModelScope.launch {
-            _users.value = userRepository.getAllUsers()
+            when (val result = userRepository.getAllUsers()) {
+                is RepositoryResult.Success -> _users.value = result.data
+                is RepositoryResult.Error -> {} // Можно добавить обработку ошибки
+                is RepositoryResult.NetworkError -> {} // Можно добавить обработку ошибки сети
+            }
         }
     }
 
     fun loadUserById(userId: String) {
         viewModelScope.launch {
-            _selectedUser.value = userRepository.getUserById(userId)
+            when (val result = userRepository.getUserById(userId)) {
+                is RepositoryResult.Success -> _selectedUser.value = result.data
+                is RepositoryResult.Error -> {} // Можно добавить обработку ошибки
+                is RepositoryResult.NetworkError -> {} // Можно добавить обработку ошибки сети
+            }
         }
     }
 
     fun updateUser(userId: String, name: String?, email: String?) {
         viewModelScope.launch {
-            userRepository.updateUser(userId, name, email, null)
-            loadAllUsers() // перезагружаем список
-            loadUserById(userId) // перезагружаем пользователя
+            when (val result = userRepository.updateUser(userId, name, email, null)) {
+                is RepositoryResult.Success -> {
+                    loadAllUsers() // перезагружаем список
+                    loadUserById(userId) // перезагружаем пользователя
+                }
+                is RepositoryResult.Error -> {} // Можно добавить обработку ошибки
+                is RepositoryResult.NetworkError -> {} // Можно добавить обработку ошибки сети
+            }
         }
     }
 
     fun deleteUser(userId: String, onDeleted: () -> Unit) {
         viewModelScope.launch {
-            userRepository.deleteUser(userId)
-            loadAllUsers()
-            onDeleted()
+            when (val result = userRepository.deleteUser(userId)) {
+                is RepositoryResult.Success -> {
+                    loadAllUsers()
+                    onDeleted()
+                }
+                is RepositoryResult.Error -> {} // Можно добавить обработку ошибки
+                is RepositoryResult.NetworkError -> {} // Можно добавить обработку ошибки сети
+            }
         }
     }
 }

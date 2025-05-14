@@ -7,9 +7,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,6 +22,8 @@ import androidx.navigation.NavHostController
 import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.ui.navigation.BottomNavigationBar
 import com.ktproject.autoservice.ui.viewmodel.ServicesViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.getViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +35,17 @@ fun ServicesScreen(
 ) {
     val services by viewModel.services.collectAsState()
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    fun handleRefresh() {
+        isRefreshing = true
+        coroutineScope.launch {
+            viewModel.loadServices()
+            delay(300)
+            isRefreshing = false
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text("Услуги") })
@@ -35,19 +53,24 @@ fun ServicesScreen(
         bottomBar = {
             BottomNavigationBar(navController = navController)
         }
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(
-                top = innerPadding.calculateTopPadding(),
-                bottom = innerPadding.calculateBottomPadding(),
-                start = 8.dp,
-                end = 8.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { handleRefresh() },
+            modifier = Modifier.padding(padding).fillMaxSize()
         ) {
-            items(services) { service ->
-                ServiceRow(service = service, onClick = { onServiceClick(service.id) })
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    bottom = 42.dp,
+                    start = 8.dp,
+                    end = 8.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(services) { service ->
+                    ServiceRow(service = service, onClick = { onServiceClick(service.id) })
+                }
             }
         }
     }

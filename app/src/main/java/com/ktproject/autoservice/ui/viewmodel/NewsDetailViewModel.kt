@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.News
 import com.ktproject.autoservice.data.repository.NewsRepository
-import com.ktproject.autoservice.data.repository.ResultState
+import com.ktproject.autoservice.data.repository.RepositoryResult
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,14 +22,14 @@ class NewsDetailViewModel(
             _newsState.value = UIState.Loading
 
             when (val result = newsRepository.getNewsById(newsId)) {
-                is ResultState.Success -> {
+                is RepositoryResult.Success -> {
                     _newsState.value = UIState.Success(result.data)
                 }
-                is ResultState.Error -> {
-                    _newsState.value = UIState.Error(result.message ?: "Неизвестная ошибка")
+                is RepositoryResult.Error -> {
+                    _newsState.value = UIState.Error(result.message)
                 }
-                is ResultState.Loading -> {
-                    _newsState.value = UIState.Loading
+                is RepositoryResult.NetworkError -> {
+                    _newsState.value = UIState.Error(result.message)
                 }
             }
         }

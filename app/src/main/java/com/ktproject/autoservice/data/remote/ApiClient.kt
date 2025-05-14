@@ -1,6 +1,6 @@
 package com.ktproject.autoservice.data.remote
 
-import com.ktproject.autoservice.data.model.ApiResponse
+import com.ktproject.autoservice.api.responses.ApiResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -13,57 +13,19 @@ import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 import io.ktor.util.reflect.*
 
+class ApiException(message: String) : Exception(message)
+
 class ApiClient(
-    private val baseUrl: String,
-    private var token: String? = null
+    val baseUrl: String,
+    internal var token: String? = null
 ) {
-
-    private val client = HttpClient {
+    val client = HttpClient {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
+            json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    suspend fun <T : Any> get(path: String, typeInfo: TypeInfo): T {
-        val requestToken = token
-        val response = client.get("$baseUrl$path") {
-            requestToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-        }
-        return response.body(typeInfo)
-    }
-
-    suspend fun <T : Any> post(path: String, body: Any? = null, typeInfo: TypeInfo): T {
-        val requestToken = token
-        val response = client.post("$baseUrl$path") {
-            contentType(ContentType.Application.Json)
-            requestToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-            body?.let { setBody(it) }
-        }
-        return response.body(typeInfo)
-    }
-
-    suspend fun <T : Any> put(path: String, body: Any? = null, typeInfo: TypeInfo): T {
-        val requestToken = token
-        val response = client.put("$baseUrl$path") {
-            contentType(ContentType.Application.Json)
-            requestToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-            body?.let { setBody(it) }
-        }
-        return response.body(typeInfo)
-    }
-
-    suspend fun <T : Any> delete(path: String, typeInfo: TypeInfo): T {
-        val requestToken = token
-        val response = client.delete("$baseUrl$path") {
-            requestToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-        }
-        return response.body(typeInfo)
-    }
-
-    fun updateToken(newToken: String?) {
+    fun updateToken(newToken: String) {
         token = newToken
     }
 
@@ -75,54 +37,52 @@ class ApiClient(
         return token
     }
 
-}
-suspend inline fun <reified T : Any> ApiClient.safeGet(path: String): ApiResponse<T> {
-    return try {
-        val response = this.get<T>(path)
-        ApiResponse(success = true, data = response)
-    } catch (e: Exception) {
-        ApiResponse(success = false, error = e.localizedMessage)
+
+    suspend fun <T : Any> _get(path: String, responseTypeInfo: TypeInfo): T {
+        val response = client.get("$baseUrl$path") {
+            token?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+        }
+        return response.body(responseTypeInfo)
+    }
+
+    suspend fun <T : Any, B : Any> _post(path: String, body: B, responseTypeInfo: TypeInfo, bodyTypeInfo: TypeInfo): T {
+        val response = client.post("$baseUrl$path") {
+            contentType(ContentType.Application.Json)
+            setBody(body, bodyTypeInfo)
+            token?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+        }
+        return response.body(responseTypeInfo)
+    }
+
+    suspend fun <T : Any, B : Any> _put(path: String, body: B, responseTypeInfo: TypeInfo, bodyTypeInfo: TypeInfo): T {
+        val response = client.put("$baseUrl$path") {
+            contentType(ContentType.Application.Json)
+            setBody(body, bodyTypeInfo)
+            token?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+        }
+        return response.body(responseTypeInfo)
+    }
+
+    suspend fun <T : Any> _delete(path: String, responseTypeInfo: TypeInfo): T {
+        val response = client.delete("$baseUrl$path") {
+            token?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+        }
+        return response.body(responseTypeInfo)
     }
 }
 
-suspend inline fun <reified T : Any> ApiClient.safePost(path: String, body: Any? = null): ApiResponse<T> {
-    return try {
-        val response = this.post<T>(path, body)
-        ApiResponse(success = true, data = response)
-    } catch (e: Exception) {
-        ApiResponse(success = false, error = e.localizedMessage)
-    }
+suspend inline fun <reified T : Any, reified B : Any> ApiClient.post(path: String, body: B): T {
+    return _post(path, body, typeInfo<T>(), typeInfo<B>())
 }
-
-suspend inline fun <reified T : Any> ApiClient.safePut(path: String, body: Any? = null): ApiResponse<T> {
-    return try {
-        val response = this.put<T>(path, body)
-        ApiResponse(success = true, data = response)
-    } catch (e: Exception) {
-        ApiResponse(success = false, error = e.localizedMessage)
-    }
-}
-
-    suspend inline fun <reified T : Any> ApiClient.safeDelete(path: String): ApiResponse<T> {
-    return try {
-        val response = this.delete<T>(path)
-        ApiResponse(success = true, data = response)
-    } catch (e: Exception) {
-        ApiResponse(success = false, error = e.localizedMessage)
-    }
-}
-
 
 suspend inline fun <reified T : Any> ApiClient.get(path: String): T {
-    return this.get(path, typeInfo<T>())
+    return _get(path, typeInfo<T>())
 }
-suspend inline fun <reified T : Any> ApiClient.post(path: String, body: Any? = null): T {
-    return this.post(path, body, typeInfo<T>())
-}
-suspend inline fun <reified T : Any> ApiClient.put(path: String, body: Any? = null): T {
-    return this.put(path, body, typeInfo<T>())
+
+suspend inline fun <reified T : Any, reified B : Any> ApiClient.put(path: String, body: B): T {
+    return _put(path, body, typeInfo<T>(), typeInfo<B>())
 }
 
 suspend inline fun <reified T : Any> ApiClient.delete(path: String): T {
-    return this.delete(path, typeInfo<T>())
+    return _delete(path, typeInfo<T>())
 }
