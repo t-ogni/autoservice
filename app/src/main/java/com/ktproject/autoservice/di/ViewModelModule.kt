@@ -58,7 +58,7 @@ val viewModelModule = module {
     viewModel { SplashViewModel(get()) }
     viewModel { AuthViewModel(get()) }
 
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get()) }
 
     viewModel { NewsDetailViewModel(get()) }
     viewModel { AdminNewsViewModel(get()) }

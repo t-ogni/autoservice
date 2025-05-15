@@ -87,9 +87,30 @@ fun RequestCard(request: Request, onClick: (String) -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("ID: ${request.id}", style = MaterialTheme.typography.labelSmall)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Описание: ${request.description}", style = MaterialTheme.typography.bodyMedium)
+            
+            // Отображаем сервис, нужно будет добавить получение имени сервиса
+            Text("Дата: ${request.date}, ${request.time}", 
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Статус: ${request.status}", color = MaterialTheme.colorScheme.primary)
+            
+            Text("Статус: ${
+                when(request.status) {
+                    "wait" -> "Ожидание"
+                    "active" -> "В работе"
+                    "completed" -> "Выполнено"
+                    "canceled" -> "Отменено"
+                    else -> request.status
+                }
+            }", 
+                color = when(request.status) {
+                    "wait" -> MaterialTheme.colorScheme.tertiary
+                    "active" -> MaterialTheme.colorScheme.primary
+                    "completed" -> MaterialTheme.colorScheme.secondary
+                    "canceled" -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.primary
+                })
+                
             if (request.result.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text("Результат: ${request.result}")

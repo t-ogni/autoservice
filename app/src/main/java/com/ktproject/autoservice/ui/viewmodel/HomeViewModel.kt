@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktproject.autoservice.data.model.News
 import com.ktproject.autoservice.data.model.Request
+import com.ktproject.autoservice.data.model.Service
 import com.ktproject.autoservice.data.repository.NewsRepository
 import com.ktproject.autoservice.data.repository.RequestRepository
 import com.ktproject.autoservice.data.repository.RepositoryResult
+import com.ktproject.autoservice.data.repository.ServiceRepository
 import com.ktproject.autoservice.data.repository.UserRepository
 import com.ktproject.autoservice.ui.components.UIState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,8 @@ data class HomeUiStateData(
 class HomeViewModel(
     private val userRepository: UserRepository,
     private val newsRepository: NewsRepository,
-    private val requestRepository: RequestRepository
+    private val requestRepository: RequestRepository,
+    private val serviceRepository: ServiceRepository
 ) : ViewModel() {
 
     private val _requestsUiState = MutableStateFlow<UIState<List<Request>>>(UIState.Loading)
@@ -39,6 +42,9 @@ class HomeViewModel(
 
     private val _userRole = MutableStateFlow<UIState<String>>(UIState.Loading)
     val userRole: StateFlow<UIState<String>> = _userRole
+    
+    // Карта сервисов для быстрого доступа по ID
+    private val _servicesMap = MutableStateFlow<Map<String, Service>>(emptyMap())
 
     init {
         loadHomeData()
@@ -49,7 +55,32 @@ class HomeViewModel(
             loadUserRole()
             loadRequests()
             loadNews()
+            loadServices()
         }
+    }
+    
+    private fun loadServices() {
+        viewModelScope.launch {
+            try {
+                when (val result = serviceRepository.getAllServices()) {
+                    is RepositoryResult.Success -> {
+                        _servicesMap.value = result.data.associateBy { it.id }
+                    }
+                    is RepositoryResult.Error -> {
+                        // Тихая обработка ошибки
+                    }
+                    is RepositoryResult.NetworkError -> {
+                        // Тихая обработка ошибки
+                    }
+                }
+            } catch (e: Exception) {
+                // Игнорируем ошибки при загрузке сервисов
+            }
+        }
+    }
+    
+    fun getServiceNameById(serviceId: String): String {
+        return _servicesMap.value[serviceId]?.title ?: "Услуга #$serviceId"
     }
 
     private suspend fun loadUserRole() {

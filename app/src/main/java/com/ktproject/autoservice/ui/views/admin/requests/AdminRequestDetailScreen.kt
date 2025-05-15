@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -275,7 +276,7 @@ fun AdminRequestDetailScreen(
                                             trailingIcon = {
                                                 IconButton(onClick = { expanded = true }) {
                                                     Icon(
-                                                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                                        imageVector = Icons.Default.DateRange,
                                                         contentDescription = "Выбрать статус",
                                                         modifier = Modifier.padding(end = 8.dp)
                                                     )

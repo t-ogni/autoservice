@@ -14,6 +14,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.LocalContentColor
 import com.vanpra.composematerialdialogs.*
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,13 +101,28 @@ fun SelectDateTimeScreen(
                     onDismissRequest = { expanded = false },
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    val selectedDate = requestData.selectedDate
                     timeSlots.forEach { time ->
+                        val isTimeSlotBusy = selectedDate != null && 
+                            busyDates.any { it == "$selectedDate $time" }
+                        
                         DropdownMenuItem(
-                            text = { Text(time) },
+                            text = { 
+                                Text(
+                                    text = time,
+                                    color = if (isTimeSlotBusy) 
+                                        Color.Gray.copy(alpha = 0.5f) 
+                                    else 
+                                        LocalContentColor.current
+                                ) 
+                            },
                             onClick = {
-                                viewModel.updateSelectedTime(time)
-                                expanded = false
-                            }
+                                if (!isTimeSlotBusy) {
+                                    viewModel.updateSelectedTime(time)
+                                    expanded = false
+                                }
+                            },
+                            enabled = !isTimeSlotBusy
                         )
                     }
                 }

@@ -3,14 +3,18 @@ package com.ktproject.autoservice.ui.views
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.ui.text.style.TextOverflow
+import com.ktproject.autoservice.ui.theme.StatusColors
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -181,17 +185,51 @@ fun HomeScreen(
                                                 Card(
                                                     onClick = { onRequestClick(request.id) },
                                                     modifier = Modifier
-                                                        .width(120.dp)
-                                                        .fillMaxHeight()
+                                                        .width(140.dp)
+                                                        .fillMaxHeight(),
+                                                    colors = CardDefaults.cardColors(
+                                                        containerColor = MaterialTheme.colorScheme.surface,
+                                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                                    )
                                                 ) {
-                                                    Box(
-                                                        contentAlignment = Alignment.Center,
-                                                        modifier = Modifier.fillMaxSize()
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .fillMaxSize()
+                                                            .padding(12.dp),
+                                                        verticalArrangement = Arrangement.SpaceBetween
                                                     ) {
+                                                        // Статус отображаем цветной точкой
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(bottom = 8.dp),
+                                                            contentAlignment = Alignment.TopEnd
+                                                        ) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(10.dp)
+                                                                    .background(
+                                                                        StatusColors.getStatusColor(request.status),
+                                                                        shape = CircleShape
+                                                                    )
+                                                            )
+                                                        }
+                                                        
+                                                        // Название услуги
                                                         Text(
-                                                            text = request.description,
+                                                            text = viewModel.getServiceNameById(request.serviceId),
                                                             style = MaterialTheme.typography.bodyMedium,
-                                                            modifier = Modifier.padding(8.dp)
+                                                            maxLines = 2,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                        
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                        
+                                                        // Дата
+                                                        Text(
+                                                            text = request.date,
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                                         )
                                                     }
                                                 }
